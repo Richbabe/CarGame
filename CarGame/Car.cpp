@@ -198,8 +198,8 @@ void Car::CarTurn(float &totalDegree, float degree, CarState carState) {
 	// SetCarWorldMatrix(rotation * translation);
 	
 
-	//car_front_left_wheel.SetWorldMatrix(car_front_left_wheel.GetModelMatirx() * wheel_rotationY * rotation * translation);
-	//car_front_right_wheel.SetWorldMatrix(car_front_right_wheel.GetModelMatirx() * wheel_rotationY * rotation * translation);
+	car_front_left_wheel.SetWorldMatrix(car_front_left_wheel.modelMatrix * wheel_rotationY * rotation * translation);
+	car_front_right_wheel.SetWorldMatrix(car_front_right_wheel.modelMatrix * wheel_rotationY * rotation * translation);
 }
 
 void Car::SetCarMoveBack(){
