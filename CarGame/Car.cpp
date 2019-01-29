@@ -11,10 +11,6 @@ Car::CarComponet::CarComponet() {
 	modelMatrix = XMMatrixIdentity();
 }
 
-void Car::CarComponet::UpdateWorldMatrix() {
-	SetWorldMatrix(rotation * translation);
-}
-
 Car::Car(){
 	car_world_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	car_head_direction = XMFLOAT3(0.0f, 0.0f, 1.0f);
@@ -41,7 +37,7 @@ void Car::InitCarBody(ComPtr<ID3D11Device> device) {
 
 	car_body.translation = XMMatrixTranslation(0.0f, 1.0f, 0.0f);
 	car_body.modelMatrix = XMMatrixTranslation(0.0f, 1.0f, 0.0f);
-	car_body.UpdateWorldMatrix();
+	car_body.SetWorldMatrix(car_body.modelMatrix);
 
 	// 初始化木盒
 	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\WoodCrate.dds", nullptr, texture.GetAddressOf()));
@@ -59,7 +55,7 @@ void Car::InitCarFrontLeftWheel(ComPtr<ID3D11Device> device) {
 	car_front_left_wheel.rotation = XMMatrixRotationZ(XM_PIDIV2);
 	car_front_left_wheel.translation = XMMatrixTranslation(-1.0f, 0.1f, 1.5f);
 	car_front_left_wheel.modelMatrix = XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(-1.0f, 0.1f, 1.5f);
-	car_front_left_wheel.UpdateWorldMatrix();
+	car_front_left_wheel.SetWorldMatrix(car_front_left_wheel.modelMatrix);
 
 	// 初始化木盒
 	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
@@ -77,7 +73,7 @@ void Car::InitCarFrontRightWheel(ComPtr<ID3D11Device> device) {
 	car_front_right_wheel.rotation = XMMatrixRotationZ(XM_PIDIV2);
 	car_front_right_wheel.translation = XMMatrixTranslation(1.0f, 0.1f, 1.5f);
 	car_front_right_wheel.modelMatrix = XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(1.0f, 0.1f, 1.5f);
-	car_front_right_wheel.UpdateWorldMatrix();
+	car_front_right_wheel.SetWorldMatrix(car_front_right_wheel.modelMatrix);
 
 	// 初始化木盒
 	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
@@ -95,7 +91,7 @@ void Car::InitCarBackLeftWheel(ComPtr<ID3D11Device> device) {
 	car_back_left_wheel.rotation = XMMatrixRotationZ(XM_PIDIV2);
 	car_back_left_wheel.translation = XMMatrixTranslation(-1.0f, 0.1f, -1.5f);
 	car_back_left_wheel.modelMatrix = XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(-1.0f, 0.1f, -1.5f);
-	car_back_left_wheel.UpdateWorldMatrix();
+	car_back_left_wheel.SetWorldMatrix(car_back_left_wheel.modelMatrix);
 
 	// 初始化木盒
 	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
@@ -113,7 +109,7 @@ void Car::InitCarBackRightWheel(ComPtr<ID3D11Device> device) {
 	car_back_right_wheel.rotation = XMMatrixRotationZ(XM_PIDIV2);
 	car_back_right_wheel.translation = XMMatrixTranslation(1.0f, 0.1f, -1.5f);
 	car_back_right_wheel.modelMatrix = XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(1.0f, 0.1f, -1.5f);
-	car_back_right_wheel.UpdateWorldMatrix();
+	car_back_right_wheel.SetWorldMatrix(car_back_right_wheel.modelMatrix);
 
 	// 初始化木盒
 	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
@@ -166,6 +162,15 @@ void Car::CarMove(float distance) {
 	translation = XMMatrixTranslation(car_world_position.x, car_world_position.y, car_world_position.z);
 
 	SetCarWorldMatrix(rotation * translation);
+
+	for (int i = 1; i < car_components.size(); i++) {
+		XMFLOAT3 wheelWolrdPos = car_components[i]->GetPosition();
+		XMMATRIX WheelRunTranslation = XMMatrixTranslation(wheelWolrdPos.x, wheelWolrdPos.y, wheelWolrdPos.z);
+		XMVECTOR Axis = XMVector3Normalize(XMLoadFloat3(&car_right_direction));
+		XMMATRIX WheelRunRotation = XMMatrixRotationAxis(Axis, angle);
+		car_components[i]->SetWorldMatrix(car_components[i]->rotation * rotation * WheelRunRotation * WheelRunTranslation);
+	}
+	//SetCarWorldMatrix(rotation * translation);
 }
 
 void Car::CarTurn(float &totalDegree, float degree, CarState carState) {
@@ -194,12 +199,6 @@ void Car::CarTurn(float &totalDegree, float degree, CarState carState) {
 		totalDegree -= degree;
 	}
 	rotation = XMMatrixRotationY(totalDegree);
-
-	// SetCarWorldMatrix(rotation * translation);
-	
-
-	car_front_left_wheel.SetWorldMatrix(car_front_left_wheel.modelMatrix * wheel_rotationY * rotation * translation);
-	car_front_right_wheel.SetWorldMatrix(car_front_right_wheel.modelMatrix * wheel_rotationY * rotation * translation);
 }
 
 void Car::SetCarMoveBack(){

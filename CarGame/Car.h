@@ -13,11 +13,6 @@ public:
 	public:
 		CarComponet();
 
-		void UpdateModelMatrix();        // 设置车部件在车模型坐标系的转换矩阵
-		DirectX::XMMATRIX GetModelMatirx();                   // 获取车部件在车模型坐标系的转换矩阵
-
-		void UpdateWorldMatrix();  // 设置车部件的世界矩阵
-
 	public:
 		DirectX::XMMATRIX modelMatrix;  // 车部件在车模型坐标系的转换矩阵	
 		DirectX::XMMATRIX rotation;     // 车部件在世界坐标系下的转换矩阵
