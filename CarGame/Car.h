@@ -26,16 +26,16 @@ public:
 
 	Car();
 
-	void InitCar(ComPtr<ID3D11Device> device);
-	void InitCarBody(ComPtr<ID3D11Device> device);
-	void InitCarFrontLeftWheel(ComPtr<ID3D11Device> device);
-	void InitCarFrontRightWheel(ComPtr<ID3D11Device> device);
-	void InitCarBackLeftWheel(ComPtr<ID3D11Device> device);
-	void InitCarBackRightWheel(ComPtr<ID3D11Device> device);
-	void SetCarMaterial(Material material);
-	void SetCarWorldMatrix(DirectX::XMMATRIX worldMatrix);
-	DirectX::XMFLOAT3 GetCarPosition();
-	DirectX::XMFLOAT3 GetCarDirection();
+	void InitCar(ComPtr<ID3D11Device> device);                 // 初始化汽车
+	void InitCarBody(ComPtr<ID3D11Device> device);             // 初始化车身
+	void InitCarFrontLeftWheel(ComPtr<ID3D11Device> device);   // 初始化汽车左前轮
+	void InitCarFrontRightWheel(ComPtr<ID3D11Device> device);  // 初始化汽车右前轮
+	void InitCarBackLeftWheel(ComPtr<ID3D11Device> device);    // 初始化汽车左后轮
+	void InitCarBackRightWheel(ComPtr<ID3D11Device> device);   // 初始化汽车右后轮
+	void SetCarMaterial(Material material);                 // 设置汽车整体材质
+	void SetCarWorldMatrix(DirectX::XMMATRIX worldMatrix);  // 设置汽车的世界矩阵
+	DirectX::XMFLOAT3 GetCarPosition();                    // 获得汽车在世界坐标系下的位置函数
+  	DirectX::XMFLOAT3 GetCarDirection();                   // 获得汽车方向函数
 
 	void CarMove(float distance);  // 汽车前进函数
 	void CarTurn(float &totalDegree, float degree, CarState carState);  // 汽车转弯函数
@@ -47,23 +47,22 @@ public:
 	void Draw(ComPtr<ID3D11DeviceContext> deviceContext, BasicEffect& effect);
 
 private:
-	Material car_material;  // 车的材质
-	DirectX::XMFLOAT3 car_world_position;  // 车在世界坐标系中的位置
-	DirectX::XMFLOAT3 car_head_direction;  // 汽车车头的朝向
-	DirectX::XMFLOAT3 car_right_direction;
-	CarComponet car_body;  // 车身
-	CarComponet car_front_left_wheel;  // 左前轮
-	CarComponet car_front_right_wheel;  // 右前轮
-	CarComponet car_back_left_wheel;  // 左后轮
-	CarComponet car_back_right_wheel;  // 右后轮
-	std::vector<CarComponet*> car_components;
+	Material carMaterial;  // 车的材质
+	DirectX::XMFLOAT3 carWorldPostition;   // 车在世界坐标系中的位置
+	DirectX::XMFLOAT3 carHeadDirection;   // 汽车车头的朝向
+	DirectX::XMFLOAT3 carRightDirection;  // 汽车右向量
+	CarComponet carBody;  // 车身
+	CarComponet carFrontLeftWheel;   // 左前轮
+	CarComponet carFrontRightWheel;  // 右前轮
+	CarComponet carBackLeftWheel;    // 左后轮
+	CarComponet carBackRightWheel;   // 右后轮
+	std::vector<CarComponet*> carComponents;    // 组成汽车的四个部件
+	std::vector<CarComponet*> carWheels;  //汽车的四个轮子
 
-	DirectX::XMMATRIX rotation;
-	DirectX::XMMATRIX translation;
+	DirectX::XMMATRIX rotation;     // 汽车整体的旋转矩阵
+	DirectX::XMMATRIX translation;  // 汽车整体的平移矩阵
 
-	DirectX::XMFLOAT4X4 carWorldMatrix;
-
-	CarState mCarState;
+	CarState mCarState;  // 汽车状态
 };
 
 #endif

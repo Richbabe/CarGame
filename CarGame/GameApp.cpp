@@ -120,7 +120,7 @@ void GameApp::UpdateScene(float dt)
 		float d = dt * 0.3f;
 		mCar.CarTurn(theta, d, mCar.GetCarState());
 	}
-	
+
 	// 控制摄像机运动逻辑
 	auto firstPersonCamera = std::dynamic_pointer_cast<FirstPersonCamera>(mCamera);
 	auto thirdPersonCamera = std::dynamic_pointer_cast<ThirdPersonCamera>(mCamera);
