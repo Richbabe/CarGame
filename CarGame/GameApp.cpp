@@ -177,26 +177,27 @@ void GameApp::DrawScene()
 	mWalls[2].Draw(md3dImmediateContext, mBasicEffect);
 	mWalls[3].Draw(md3dImmediateContext, mBasicEffect);
 	mWalls[4].Draw(md3dImmediateContext, mBasicEffect);
-	mFloor.Draw(md3dImmediateContext, mBasicEffect);
-	mWoodCrate.Draw(md3dImmediateContext, mBasicEffect);
+
 	mCar.Draw(md3dImmediateContext, mBasicEffect);
+	mGround.Draw(md3dImmediateContext, mBasicEffect);
+	mHouse.Draw(md3dImmediateContext, mBasicEffect);
 
 	// ***********************
 	// 3. 绘制不透明反射物体的阴影
 	//
 
-	mWoodCrate.SetMaterial(mShadowMat);
 	mCar.SetCarMaterial(mShadowMat);
+	mHouse.SetMaterial(mShadowMat);
 	mBasicEffect.SetShadowState(true);	// 反射开启，阴影开启			
 	mBasicEffect.SetRenderNoDoubleBlend(md3dImmediateContext, 1);
 
-	mWoodCrate.Draw(md3dImmediateContext, mBasicEffect);
 	mCar.Draw(md3dImmediateContext, mBasicEffect);
+	mHouse.Draw(md3dImmediateContext, mBasicEffect);
 
 	// 恢复到原来的状态
 	mBasicEffect.SetShadowState(false);
-	mWoodCrate.SetMaterial(mWoodCrateMat);
-	mCar.SetCarMaterial(mWoodCrateMat);
+	mCar.SetCarMaterial(mNormalMeterialMat);
+	mHouse.SetMaterial(mNormalMeterialMat);
 
 	// ***********************
 	// 4. 绘制透明镜面
@@ -215,24 +216,25 @@ void GameApp::DrawScene()
 
 	for (auto& wall : mWalls)
 		wall.Draw(md3dImmediateContext, mBasicEffect);
-	mFloor.Draw(md3dImmediateContext, mBasicEffect);
-	mWoodCrate.Draw(md3dImmediateContext, mBasicEffect);
 	mCar.Draw(md3dImmediateContext, mBasicEffect);
+	mGround.Draw(md3dImmediateContext, mBasicEffect);
+	mHouse.Draw(md3dImmediateContext, mBasicEffect);
+
 
 	// ************************
 	// 6. 绘制不透明正常物体的阴影
 	//
-	mWoodCrate.SetMaterial(mShadowMat);
 	mCar.SetCarMaterial(mShadowMat);
+	mHouse.SetMaterial(mShadowMat);
 	mBasicEffect.SetShadowState(true);	// 反射关闭，阴影开启
 	mBasicEffect.SetRenderNoDoubleBlend(md3dImmediateContext, 0);
 
-	mWoodCrate.Draw(md3dImmediateContext, mBasicEffect);
 	mCar.Draw(md3dImmediateContext, mBasicEffect);
+	mHouse.Draw(md3dImmediateContext, mBasicEffect);
 
 	mBasicEffect.SetShadowState(false);		// 阴影关闭
-	mWoodCrate.SetMaterial(mWoodCrateMat);
-	mCar.SetCarMaterial(mWoodCrateMat);
+	mCar.SetCarMaterial(mNormalMeterialMat);
+	mHouse.SetMaterial(mNormalMeterialMat);
 
 	// ******************
 	// 绘制Direct2D部分
@@ -270,28 +272,29 @@ bool GameApp::InitResource()
 	material.Diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
 	material.Specular = XMFLOAT4(0.1f, 0.1f, 0.1f, 16.0f);
 
-	mWoodCrateMat = material;
+	mNormalMeterialMat = material;
 	mShadowMat.Ambient = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	mShadowMat.Diffuse = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.5f);
 	mShadowMat.Specular = XMFLOAT4(0.0f, 0.0f, 0.0f, 16.0f);
-
-	// 初始化木盒
-	HR(CreateDDSTextureFromFile(md3dDevice.Get(), L"Texture\\WoodCrate.dds", nullptr, texture.GetAddressOf()));
-	mWoodCrate.SetBuffer(md3dDevice, Geometry::CreateBox());
-	// 抬起高度避免深度缓冲区资源争夺
-	mWoodCrate.SetWorldMatrix(XMMatrixTranslation(0.0f, 0.01f, 5.0f));
-	mWoodCrate.SetTexture(texture);
-	mWoodCrate.SetMaterial(material);
 
 	// 初始化汽车
 	mCar.InitCar(md3dDevice);
 
 	// 初始化地板
-	HR(CreateDDSTextureFromFile(md3dDevice.Get(), L"Texture\\floor.dds", nullptr, texture.ReleaseAndGetAddressOf()));
-	mFloor.SetBuffer(md3dDevice,
-		Geometry::CreatePlane(XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT2(20.0f, 20.0f), XMFLOAT2(5.0f, 5.0f)));
-	mFloor.SetTexture(texture);
-	mFloor.SetMaterial(material);
+	mObjReader.Read(L"Model\\ground.mbo", L"Model\\ground.obj");
+	mGround.SetModel(Model(md3dDevice, mObjReader));
+	mGround.SetMaterial(material);
+
+	// 初始化房屋模型
+	mObjReader.Read(L"Model\\house.mbo", L"Model\\house.obj");
+	mHouse.SetModel(Model(md3dDevice, mObjReader));
+	mHouse.SetMaterial(material);
+	// 获取房屋包围盒
+	XMMATRIX S = XMMatrixScaling(0.01f, 0.01f, 0.01f) * XMMatrixTranslation(0.0f, 0.0f, -2.0f);
+	BoundingBox houseBox = mHouse.GetLocalBoundingBox();
+	houseBox.Transform(houseBox, S);
+	// 让房屋底部紧贴地面
+	mHouse.SetWorldMatrix(S * XMMatrixTranslation(0.0f, -(houseBox.Center.y - houseBox.Extents.y + 1.0f), 0.0f));
 
 	// 初始化墙体
 	mWalls.resize(5);
@@ -309,11 +312,11 @@ bool GameApp::InitResource()
 		mWalls[i].SetMaterial(material);
 		mWalls[i].SetTexture(texture);
 	}
-	mWalls[0].SetBuffer(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f)));
-	mWalls[1].SetBuffer(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f)));
-	mWalls[2].SetBuffer(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f)));
-	mWalls[3].SetBuffer(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f)));
-	mWalls[4].SetBuffer(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f)));
+	mWalls[0].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f))));
+	mWalls[1].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f))));
+	mWalls[2].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
+	mWalls[3].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
+	mWalls[4].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
 
 	mWalls[0].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(-7.0f, 3.0f, 10.0f));
 	mWalls[1].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(7.0f, 3.0f, 10.0f));
@@ -326,8 +329,8 @@ bool GameApp::InitResource()
 	material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.5f);
 	material.Specular = XMFLOAT4(0.4f, 0.4f, 0.4f, 16.0f);
 	HR(CreateDDSTextureFromFile(md3dDevice.Get(), L"Texture\\ice.dds", nullptr, texture.ReleaseAndGetAddressOf()));
-	mMirror.SetBuffer(md3dDevice,
-		Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), XMFLOAT2(1.0f, 1.0f)));
+	mMirror.SetModel(Model(md3dDevice,
+		Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), XMFLOAT2(1.0f, 1.0f))));
 	mMirror.SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(0.0f, 3.0f, 10.0f));
 	mMirror.SetTexture(texture);
 	mMirror.SetMaterial(material);

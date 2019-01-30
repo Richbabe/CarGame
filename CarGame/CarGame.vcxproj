@@ -175,7 +175,9 @@
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="LightHelper.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="ObjReader.h" />
     <ClInclude Include="RenderStates.h" />
     <ClInclude Include="ThirdPersonCamera.h" />
     <ClInclude Include="Vertex.h" />
@@ -196,7 +198,9 @@
     <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="ObjReader.cpp" />
     <ClCompile Include="RenderStates.cpp" />
     <ClCompile Include="ThirdPersonCamera.cpp" />
     <ClCompile Include="Vertex.cpp" />

@@ -103,6 +103,12 @@
     <ClInclude Include="Car.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjReader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -160,6 +166,12 @@
       <Filter>通用文件</Filter>
     </ClCompile>
     <ClCompile Include="Car.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjReader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

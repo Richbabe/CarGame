@@ -78,7 +78,7 @@ public:
 	ComPtr<ID3D11InputLayout>  vertexLayout2D;				// 用于2D的顶点输入布局
 	ComPtr<ID3D11InputLayout>  vertexLayout3D;				// 用于3D的顶点输入布局
 
-	ComPtr<ID3D11ShaderResourceView> texture;				// 用于绘制的纹理
+	ComPtr<ID3D11ShaderResourceView> textureDiffuse;				// 用于绘制的纹理
 
 };
 
@@ -354,9 +354,9 @@ void BasicEffect::SetMaterial(const Material & material)
 	pImpl->isDirty = cBuffer.isDirty = true;
 }
 
-void BasicEffect::SetTexture(ComPtr<ID3D11ShaderResourceView> texture)
+void BasicEffect::SetTextureDiffuse(ComPtr<ID3D11ShaderResourceView> texture)
 {
-	pImpl->texture = texture;
+	pImpl->textureDiffuse = texture;
 }
 
 void XM_CALLCONV BasicEffect::SetEyePos(FXMVECTOR eyePos)
@@ -396,7 +396,7 @@ void BasicEffect::Apply(ComPtr<ID3D11DeviceContext> deviceContext)
 	pCBuffers[4]->BindPS(deviceContext);
 
 	// 设置纹理
-	deviceContext->PSSetShaderResources(0, 1, pImpl->texture.GetAddressOf());
+	deviceContext->PSSetShaderResources(0, 1, pImpl->textureDiffuse.GetAddressOf());
 
 	if (pImpl->isDirty)
 	{

@@ -31,20 +31,21 @@ private:
 	ComPtr<IDWriteFont> mFont;					// 字体
 	ComPtr<IDWriteTextFormat> mTextFormat;		// 文本格式
 
-	GameObject mWoodCrate;									// 木盒
-	GameObject mFloor;										// 地板
 	std::vector<GameObject> mWalls;							// 墙壁
 	GameObject mMirror;										// 镜面
 	Car mCar;                                                // 汽车
+	GameObject mHouse;										// 房屋
+	GameObject mGround;										// 地面
 
 	Material mShadowMat;									// 阴影材质
-	Material mWoodCrateMat;									// 木盒材质
+	Material mNormalMeterialMat;							// 普通材质
 
 	BasicEffect mBasicEffect;								// 对象渲染特效管理
 
 	std::shared_ptr<Camera> mCamera;						// 摄像机
 	CameraMode mCameraMode;									// 摄像机模式
 
+	ObjReader mObjReader;									// 模型读取对象
 };
 
 
