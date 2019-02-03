@@ -389,6 +389,7 @@ void BasicEffect::SetTextureDiffuse(ComPtr<ID3D11ShaderResourceView> texture)
 	pImpl->textureDiffuse = texture;
 }
 
+
 void XM_CALLCONV BasicEffect::SetEyePos(FXMVECTOR eyePos)
 {
 	auto& cBuffer = pImpl->cbFrame;

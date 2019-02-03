@@ -30,6 +30,9 @@
     <None Include="HLSL\LightHelper.hlsli">
       <Filter>着色器</Filter>
     </None>
+    <None Include="HLSL\Sky.hlsli">
+      <Filter>着色器</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="HLSL\Basic_VS.hlsl">
@@ -39,6 +42,12 @@
       <Filter>着色器</Filter>
     </FxCompile>
     <FxCompile Include="HLSL\Basic_Instance_VS.hlsl">
+      <Filter>着色器</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\Sky_PS.hlsl">
+      <Filter>着色器</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\Sky_VS.hlsl">
       <Filter>着色器</Filter>
     </FxCompile>
   </ItemGroup>
@@ -112,6 +121,9 @@
     <ClInclude Include="Collision.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="SkyRender.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -178,6 +190,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Collision.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyEffect.cpp">
+      <Filter>特效文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyRender.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

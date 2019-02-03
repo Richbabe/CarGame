@@ -23,6 +23,9 @@ bool GameApp::Init()
 	if (!mBasicEffect.InitAll(md3dDevice))
 		return false;
 
+	if (!mSkyEffect.InitAll(md3dDevice))
+		return false;
+
 	if (!InitResource())
 		return false;
 
@@ -144,16 +147,18 @@ void GameApp::UpdateScene(float dt)
 	mBasicEffect.SetViewMatrix(mCamera->GetViewMatrix());
 	mBasicEffect.SetEyePos(mCamera->GetPositionVector());
 
-	// ******************
-	// 视锥体裁剪开关
-	//
+	// 选择天空盒
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::D1))
 	{
-		mEnableInstancing = !mEnableInstancing;
+		mSkyBoxMode = SkyBoxMode::Daylight;
 	}
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::D2))
 	{
-		mEnableFrustumCulling = !mEnableFrustumCulling;
+		mSkyBoxMode = SkyBoxMode::Sunset;
+	}
+	if (mKeyboardTracker.IsKeyPressed(Keyboard::D3))
+	{
+		mSkyBoxMode = SkyBoxMode::Desert;
 	}
 	
 	// 退出程序，这里应向窗口发送销毁信息
@@ -262,6 +267,15 @@ void GameApp::DrawScene()
 	mCar.SetCarMaterial(mNormalMeterialMat);
 	mHouse.SetMaterial(mNormalMeterialMat);
 
+	// 绘制天空盒
+	mSkyEffect.SetRenderDefault(md3dImmediateContext);
+	switch (mSkyBoxMode)
+	{
+	case SkyBoxMode::Daylight: mDaylight->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
+	case SkyBoxMode::Sunset: mSunset->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
+	case SkyBoxMode::Desert: mDesert->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
+	}
+
 	// ******************
 	// 绘制Direct2D部分
 	//
@@ -294,6 +308,30 @@ bool GameApp::InitResource()
 	// 默认开启视锥体裁剪和硬件实例化
 	mEnableInstancing = true;
 	mEnableFrustumCulling = true;
+
+	// ******************
+	// 初始化天空盒相关
+
+	
+	mDaylight = std::make_unique<SkyRender>(
+		md3dDevice, md3dImmediateContext,
+		L"Texture\\daylight.jpg",
+		5000.0f);
+		
+	mSunset = std::make_unique<SkyRender>(
+		md3dDevice, md3dImmediateContext,
+		std::vector<std::wstring>{
+		L"Texture\\sunset_posX.bmp", L"Texture\\sunset_negX.bmp",
+			L"Texture\\sunset_posY.bmp", L"Texture\\sunset_negY.bmp",
+			L"Texture\\sunset_posZ.bmp", L"Texture\\sunset_negZ.bmp", },
+		5000.0f);
+
+	mDesert = std::make_unique<SkyRender>(
+		md3dDevice, md3dImmediateContext,
+		L"Texture\\desertcube1024.dds",
+		5000.0f);
+	
+	mSkyBoxMode = SkyBoxMode::Daylight;
 
 	// ******************
 	// 初始化游戏对象
@@ -390,13 +428,14 @@ bool GameApp::InitResource()
 	camera->SetDistance(5.0f);
 	camera->SetDistanceMinMax(2.0f, 14.0f);
 	
-	
+
 	mBasicEffect.SetViewMatrix(mCamera->GetViewMatrix());
 	mBasicEffect.SetEyePos(mCamera->GetPositionVector());
 
 	mCamera->SetFrustum(XM_PI / 3, AspectRatio(), 0.5f, 1000.0f);
 	mBasicEffect.SetProjMatrix(mCamera->GetProjMatrix());
 	
+
 	// ******************
 	// 初始化不会变化的值
 	//
