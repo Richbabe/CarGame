@@ -1,8 +1,8 @@
 #include "Basic.hlsli"
 
 // 3D顶点着色器
-VertexPosHWNormalTex VS_3D(VertexPosNormalTex vIn) {
-	VertexPosHWNormalTex vOut;
+VOut VS(VIn vIn) {
+	VOut vOut;
 	matrix viewProj = mul(gView, gProj);
 	float4 posW = mul(float4(vIn.PosL, 1.0f), gWorld);
 	// 若当前在绘制反射物体，先进行反射操作

@@ -27,6 +27,10 @@ public:
 	DirectX::BoundingBox GetLocalBoundingBox() const;                // 获取局部坐标系的AABB包围盒
 	DirectX::BoundingBox GetBoundingBox() const;                     // 获取世界坐标系的AABB包围盒
 	DirectX::BoundingOrientedBox GetBoundingOrientedBox() const;     // 获取世界坐标系的OBB包围盒
+	
+	// 设置实例缓冲区
+	size_t GetCapacity() const;  // 获取实例缓冲区可容纳的实例数目
+	void ResizeBuffer(ComPtr<ID3D11Device> device, size_t count);  // 重新设置实例缓冲区可容纳的实例数目
 
 	// 设置模型
 	void SetModel(Model&& model);
@@ -35,12 +39,17 @@ public:
 
 	// 绘制
 	void Draw(ComPtr<ID3D11DeviceContext> deviceContext, BasicEffect& effect);
+	// 绘制实例
+	void DrawInstanced(ComPtr<ID3D11DeviceContext> deviceContext, BasicEffect & effect, const std::vector<DirectX::XMMATRIX>& data);
 private:
 	Model mModel;								    // 模型
 	DirectX::XMFLOAT3 mWorldPosition;               // 世界坐标系下的位置
 	DirectX::XMFLOAT4X4 mWorldMatrix;               // 世界矩阵
 	Material mMaterial;								// 物体材质
 	ComPtr<ID3D11ShaderResourceView> mTexture;      // 纹理
+
+	ComPtr<ID3D11Buffer> mInstancedBuffer;						// 实例缓冲区
+	size_t mCapacity;											// 缓冲区容量
 };
 
 #endif

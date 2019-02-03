@@ -87,6 +87,7 @@ void GameApp::OnResize()
 
 void GameApp::UpdateScene(float dt)
 {
+	
 	static float phi = 0.0f, theta = 0.0f;
 	// 更新鼠标事件，获取相对偏移量
 	Mouse::State mouseState = mMouse->GetState();
@@ -100,13 +101,13 @@ void GameApp::UpdateScene(float dt)
 	if (keyState.IsKeyDown(Keyboard::W))
 	{
 		mCar.SetCarMoveForward();
-		mCar.CarMove(dt * 3.0f);
+		mCar.CarMove(dt * 10.0f);
 	}
 
 	if (keyState.IsKeyDown(Keyboard::S))
 	{
 		mCar.SetCarMoveBack();
-		mCar.CarMove(dt * -3.0f);
+		mCar.CarMove(dt * -10.0f);
 
 	}
 	if (!keyState.IsKeyDown(Keyboard::W) && !keyState.IsKeyDown(Keyboard::S)) {
@@ -142,11 +143,23 @@ void GameApp::UpdateScene(float dt)
 
 	mBasicEffect.SetViewMatrix(mCamera->GetViewMatrix());
 	mBasicEffect.SetEyePos(mCamera->GetPositionVector());
+
+	// ******************
+	// 视锥体裁剪开关
+	//
+	if (mKeyboardTracker.IsKeyPressed(Keyboard::D1))
+	{
+		mEnableInstancing = !mEnableInstancing;
+	}
+	if (mKeyboardTracker.IsKeyPressed(Keyboard::D2))
+	{
+		mEnableFrustumCulling = !mEnableFrustumCulling;
+	}
 	
 	// 退出程序，这里应向窗口发送销毁信息
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::Escape))
 		SendMessage(MainWnd(), WM_DESTROY, 0, 0);
-
+	
 }
 
 void GameApp::DrawScene()
@@ -154,16 +167,25 @@ void GameApp::DrawScene()
 	assert(md3dImmediateContext);
 	assert(mSwapChain);
 
-	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView.Get(), reinterpret_cast<const float*>(&Colors::Black));
+	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView.Get(), reinterpret_cast<const float*>(&Colors::Silver));
 	md3dImmediateContext->ClearDepthStencilView(mDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-
+	// 统计实际绘制的物体数目
+	std::vector<XMMATRIX> acceptedData;
+	// 是否开启视锥体裁剪
+	if (mEnableFrustumCulling)
+	{
+		acceptedData = Collision::FrustumCulling(mInstancedData, mTrees.GetLocalBoundingBox(),
+			mCamera->GetViewMatrix(), mCamera->GetProjMatrix());
+	}
+	// 确定使用的数据集
+	const std::vector<XMMATRIX>& refData = mEnableFrustumCulling ? acceptedData : mInstancedData;
 
 	// *********************
 	// 1. 给镜面反射区域写入值1到模板缓冲区
 	// 
 
-	mBasicEffect.SetWriteStencilOnly(md3dImmediateContext, 1);
+	mBasicEffect.SetWriteStencilOnly(md3dImmediateContext, 1, BasicEffect::RenderObject);
 	mMirror.Draw(md3dImmediateContext, mBasicEffect);
 
 	// ***********************
@@ -172,7 +194,7 @@ void GameApp::DrawScene()
 
 	// 开启反射绘制
 	mBasicEffect.SetReflectionState(true);
-	mBasicEffect.SetRenderDefaultWithStencil(md3dImmediateContext, 1);
+	mBasicEffect.SetRenderDefaultWithStencil(md3dImmediateContext, 1, BasicEffect::RenderObject);
 
 	mWalls[2].Draw(md3dImmediateContext, mBasicEffect);
 	mWalls[3].Draw(md3dImmediateContext, mBasicEffect);
@@ -189,7 +211,7 @@ void GameApp::DrawScene()
 	mCar.SetCarMaterial(mShadowMat);
 	mHouse.SetMaterial(mShadowMat);
 	mBasicEffect.SetShadowState(true);	// 反射开启，阴影开启			
-	mBasicEffect.SetRenderNoDoubleBlend(md3dImmediateContext, 1);
+	mBasicEffect.SetRenderNoDoubleBlend(md3dImmediateContext, 1, BasicEffect::RenderObject);
 
 	mCar.Draw(md3dImmediateContext, mBasicEffect);
 	mHouse.Draw(md3dImmediateContext, mBasicEffect);
@@ -205,14 +227,14 @@ void GameApp::DrawScene()
 
 	// 关闭反射绘制
 	mBasicEffect.SetReflectionState(false);
-	mBasicEffect.SetRenderAlphaBlendWithStencil(md3dImmediateContext, 1);
+	mBasicEffect.SetRenderAlphaBlendWithStencil(md3dImmediateContext, 1, BasicEffect::RenderObject);
 
 	mMirror.Draw(md3dImmediateContext, mBasicEffect);
 
 	// ************************
 	// 5. 绘制不透明的正常物体
 	//
-	mBasicEffect.SetRenderDefault(md3dImmediateContext);
+	mBasicEffect.SetRenderDefault(md3dImmediateContext, BasicEffect::RenderObject);
 
 	for (auto& wall : mWalls)
 		wall.Draw(md3dImmediateContext, mBasicEffect);
@@ -220,14 +242,18 @@ void GameApp::DrawScene()
 	mGround.Draw(md3dImmediateContext, mBasicEffect);
 	mHouse.Draw(md3dImmediateContext, mBasicEffect);
 
+	mBasicEffect.SetRenderDefault(md3dImmediateContext, BasicEffect::RenderInstance);
+	mTrees.DrawInstanced(md3dImmediateContext, mBasicEffect, refData);
+
 
 	// ************************
 	// 6. 绘制不透明正常物体的阴影
 	//
 	mCar.SetCarMaterial(mShadowMat);
 	mHouse.SetMaterial(mShadowMat);
+
 	mBasicEffect.SetShadowState(true);	// 反射关闭，阴影开启
-	mBasicEffect.SetRenderNoDoubleBlend(md3dImmediateContext, 0);
+	mBasicEffect.SetRenderNoDoubleBlend(md3dImmediateContext, 0, BasicEffect::RenderObject);
 
 	mCar.Draw(md3dImmediateContext, mBasicEffect);
 	mHouse.Draw(md3dImmediateContext, mBasicEffect);
@@ -258,12 +284,17 @@ void GameApp::DrawScene()
 	}
 
 	HR(mSwapChain->Present(0, 0));
+	
 }
 
 
 
 bool GameApp::InitResource()
 {
+	// 默认开启视锥体裁剪和硬件实例化
+	mEnableInstancing = true;
+	mEnableFrustumCulling = true;
+
 	// ******************
 	// 初始化游戏对象
 	ComPtr<ID3D11ShaderResourceView> texture;
@@ -294,7 +325,7 @@ bool GameApp::InitResource()
 	BoundingBox houseBox = mHouse.GetLocalBoundingBox();
 	houseBox.Transform(houseBox, S);
 	// 让房屋底部紧贴地面
-	mHouse.SetWorldMatrix(S * XMMatrixTranslation(0.0f, -(houseBox.Center.y - houseBox.Extents.y + 1.0f), 0.0f));
+	mHouse.SetWorldMatrix(S * XMMatrixTranslation(0.0f, -(houseBox.Center.y - houseBox.Extents.y + 2.0f), 0.0f));
 
 	// 初始化墙体
 	mWalls.resize(5);
@@ -335,6 +366,9 @@ bool GameApp::InitResource()
 	mMirror.SetTexture(texture);
 	mMirror.SetMaterial(material);
 
+	// 创建随机的树
+	CreateRandomTrees();
+
 	// ******************
 	// 初始化摄像机
 	//
@@ -347,7 +381,6 @@ bool GameApp::InitResource()
 	camera->LookAt(mCar.GetCarPosition(), mCar.GetCarDirection(), XMFLOAT3(0.0f, 1.0f, 0.0f));
 	mCamera->UpdateViewMatrix();
 	*/
-	
 	// 初始化为第三人称摄像机
 	mCameraMode = CameraMode::ThirdPerson;
 	auto camera = std::shared_ptr<ThirdPersonCamera>(new ThirdPersonCamera);
@@ -393,5 +426,55 @@ bool GameApp::InitResource()
 	return true;
 }
 
+void GameApp::CreateRandomTrees()
+{
+	srand((unsigned)time(nullptr));
+	Material material;
+	material.Ambient = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	material.Diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	material.Specular = XMFLOAT4(0.1f, 0.1f, 0.1f, 16.0f);
 
+	// 初始化树
+	mObjReader.Read(L"Model\\tree.mbo", L"Model\\tree.obj");
+	mTrees.SetModel(Model(md3dDevice, mObjReader));
+	mTrees.SetMaterial(material);
+	XMMATRIX S = XMMatrixScaling(0.015f, 0.015f, 0.015f);
+
+	BoundingBox treeBox = mTrees.GetLocalBoundingBox();
+	// 获取树包围盒顶点
+	mTreeBoxData = Collision::CreateBoundingBox(treeBox, XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+	// 让树木底部紧贴地面位于y = -2的平面
+	treeBox.Transform(treeBox, S);
+	XMMATRIX T0 = XMMatrixTranslation(0.0f, -(treeBox.Center.y - treeBox.Extents.y + 2.0f), 0.0f);
+	/*
+	// 随机生成256颗随机朝向的树
+	float theta = 0.0f;
+	for (int i = 0; i < 16; ++i)
+	{
+		// 取5-125的半径放置随机的树
+		for (int j = 0; j < 4; ++j)
+		{
+			// 距离越远，树木越多
+			for (int k = 0; k < 2 * j + 1; ++k)
+			{
+				float radius = (float)(rand() % 30 + 30 * j + 5);
+				float randomRad = rand() % 256 / 256.0f * XM_2PI / 16;
+				XMMATRIX T1 = XMMatrixTranslation(radius * cosf(theta + randomRad), 0.0f, radius * sinf(theta + randomRad));
+				XMMATRIX R = XMMatrixRotationY(rand() % 256 / 256.0f * XM_2PI);
+				XMMATRIX World = S * R * T0 * T1;
+				mInstancedData.push_back(World);
+			}
+		}
+		theta += XM_2PI / 16;
+	}
+	*/
+
+	for (int i = 0; i < 256; ++i) {
+		XMMATRIX T1 = XMMatrixTranslation(-5.0f, 0.0f, i * 2);
+		XMMATRIX R = XMMatrixRotationY(rand() % 256 / 256.0f * XM_2PI);
+		XMMATRIX World = S * R * T0 * T1;
+		mInstancedData.push_back(World);
+	}
+
+}
 

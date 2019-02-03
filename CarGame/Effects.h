@@ -41,6 +41,8 @@ public:
 class BasicEffect : public IEffect
 {
 public:
+	// 渲染类型，RenderObject为渲染普通物体，RenderInstance为实例化渲染
+	enum RenderType { RenderObject, RenderInstance };
 
 	BasicEffect();
 	virtual ~BasicEffect() override;
@@ -62,23 +64,17 @@ public:
 	//
 
 	// 默认状态来绘制
-	void SetRenderDefault(ComPtr<ID3D11DeviceContext> deviceContext);
+	void SetRenderDefault(ComPtr<ID3D11DeviceContext> deviceContext, RenderType type);
 	// Alpha混合绘制
-	void SetRenderAlphaBlend(ComPtr<ID3D11DeviceContext> deviceContext);
+	void SetRenderAlphaBlend(ComPtr<ID3D11DeviceContext> deviceContext, RenderType type);
 	// 无二次混合
-	void SetRenderNoDoubleBlend(ComPtr<ID3D11DeviceContext> deviceContext, UINT stencilRef);
+	void SetRenderNoDoubleBlend(ComPtr<ID3D11DeviceContext> deviceContext, UINT stencilRef, RenderType type);
 	// 仅写入模板值
-	void SetWriteStencilOnly(ComPtr<ID3D11DeviceContext> deviceContext, UINT stencilRef);
+	void SetWriteStencilOnly(ComPtr<ID3D11DeviceContext> deviceContext, UINT stencilRef, RenderType type);
 	// 对指定模板值的区域进行绘制，采用默认状态
-	void SetRenderDefaultWithStencil(ComPtr<ID3D11DeviceContext> deviceContext, UINT stencilRef);
+	void SetRenderDefaultWithStencil(ComPtr<ID3D11DeviceContext> deviceContext, UINT stencilRef, RenderType type);
 	// 对指定模板值的区域进行绘制，采用Alpha混合
-	void SetRenderAlphaBlendWithStencil(ComPtr<ID3D11DeviceContext> deviceContext, UINT stencilRef);
-	// 2D默认状态绘制
-	void Set2DRenderDefault(ComPtr<ID3D11DeviceContext> deviceContext);
-	// 2D混合绘制
-	void Set2DRenderAlphaBlend(ComPtr<ID3D11DeviceContext> deviceContext);
-
-	
+	void SetRenderAlphaBlendWithStencil(ComPtr<ID3D11DeviceContext> deviceContext, UINT stencilRef, RenderType type);
 
 	//
 	// 矩阵设置

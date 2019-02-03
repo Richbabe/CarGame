@@ -27,18 +27,18 @@
     <None Include="HLSL\Basic.hlsli">
       <Filter>着色器</Filter>
     </None>
+    <None Include="HLSL\LightHelper.hlsli">
+      <Filter>着色器</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="HLSL\Basic_PS_2D.hlsl">
+    <FxCompile Include="HLSL\Basic_VS.hlsl">
       <Filter>着色器</Filter>
     </FxCompile>
-    <FxCompile Include="HLSL\Basic_PS_3D.hlsl">
+    <FxCompile Include="HLSL\Basic_PS.hlsl">
       <Filter>着色器</Filter>
     </FxCompile>
-    <FxCompile Include="HLSL\Basic_VS_2D.hlsl">
-      <Filter>着色器</Filter>
-    </FxCompile>
-    <FxCompile Include="HLSL\Basic_VS_3D.hlsl">
+    <FxCompile Include="HLSL\Basic_Instance_VS.hlsl">
       <Filter>着色器</Filter>
     </FxCompile>
   </ItemGroup>
@@ -109,6 +109,9 @@
     <ClInclude Include="ObjReader.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Collision.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -172,6 +175,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ObjReader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
