@@ -18,12 +18,6 @@ public:
 	void XM_CALLCONV LookTo(DirectX::FXMVECTOR pos, DirectX::FXMVECTOR to, DirectX::FXMVECTOR up);
 	void LookTo(const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT3& to, const DirectX::XMFLOAT3& up);
 
-	// 左右平移
-	void Strafe(float d);
-	// 直行(平面移动)
-	void Walk(float d);
-	// 前进(朝前向移动,用于自由视角的时候)
-	void MoveForward(float d);
 	// 上下观察(绕摄像机右向量旋转)
 	void Pitch(float rad);
 	// 左右观察

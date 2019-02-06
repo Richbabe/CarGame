@@ -43,32 +43,6 @@ void FirstPersonCamera::LookTo(const DirectX::XMFLOAT3& pos, const DirectX::XMFL
 	LookTo(XMLoadFloat3(&pos), XMLoadFloat3(&to), XMLoadFloat3(&up));
 }
 
-void FirstPersonCamera::Strafe(float d) {
-	XMVECTOR Pos = XMLoadFloat3(&mPosition);
-	XMVECTOR Right = XMLoadFloat3(&mRight);
-	XMVECTOR Dist = XMVectorReplicate(d);  // 得到向量（d,d,d）
-	XMVECTOR DestPos = XMVectorMultiplyAdd(Dist, Right, Pos);  // 目标位置DestPos = Dist * Right + Pos
-	XMStoreFloat3(&mPosition, DestPos);
-}
-
-void FirstPersonCamera::Walk(float d) {
-	XMVECTOR Pos = XMLoadFloat3(&mPosition);
-	XMVECTOR Right = XMLoadFloat3(&mRight);
-	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	XMVECTOR Front = XMVector3Normalize(XMVector3Cross(Right, Up));  // 前进方向
-	XMVECTOR Dist = XMVectorReplicate(d);  // 得到向量（d,d,d）
-	XMVECTOR DestPos = XMVectorMultiplyAdd(Dist, Front, Pos);  // 目标位置DestPos = Dist * Front + Pos
-	XMStoreFloat3(&mPosition, DestPos);
-}
-
-void FirstPersonCamera::MoveForward(float d) {
-	XMVECTOR Pos = XMLoadFloat3(&mPosition);
-	XMVECTOR Look = XMLoadFloat3(&mLook);
-	XMVECTOR Dist = XMVectorReplicate(d);  // 得到向量（d,d,d）
-	XMVECTOR DestPos = XMVectorMultiplyAdd(Dist, Look, Pos);  // 目标位置DestPos = Dist * Look + Pos
-	XMStoreFloat3(&mPosition, DestPos);
-}
-
 void FirstPersonCamera::Pitch(float rad) {
 	XMMATRIX rotateMatrix = XMMatrixRotationAxis(XMLoadFloat3(&mRight), rad);  // 获得绕摄像机右向量旋转rad度的旋转矩阵
 	XMVECTOR Up = XMVector3TransformNormal(XMLoadFloat3(&mUp), rotateMatrix);  // 计算通过旋转矩阵旋转后的上轴
@@ -102,6 +76,10 @@ void FirstPersonCamera::UpdateViewMatrix() {
 	// 保持摄像机的轴互为正交，且长度都为1
 	Look = XMVector3Normalize(Look);
 	Up = XMVector3Normalize(XMVector3Cross(Look, Right));
+
+	if (XMVector3Equal(Up, XMVectorZero())) {
+		Up = XMVectorSetY(Up, 1.0f);
+	}
 
 	// Up, Look已经正交化，需要计算对应叉乘得到Right
 	Right = XMVector3Cross(Up, Look);

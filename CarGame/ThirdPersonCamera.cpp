@@ -96,6 +96,10 @@ void ThirdPersonCamera::UpdateViewMatrix() {
 	XMVECTOR Look = XMVector3Normalize(XMLoadFloat3(&mTarget) - Position);
 	XMVECTOR Right = XMVector3Normalize(XMVector3Cross(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), Look));
 	XMVECTOR Up = XMVector3Normalize(XMVector3Cross(Look, Right));
+
+	if(XMVector3Equal(Up, XMVectorZero())){
+		Up = XMVectorSetY(Up, 1.0f);
+	}
 	
 	XMStoreFloat3(&mRight, Right);
 	XMStoreFloat3(&mUp, Up);

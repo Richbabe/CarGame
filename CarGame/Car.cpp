@@ -16,13 +16,16 @@ Car::Car(){
 	carHeadDirection = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	carRightDirection = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	mCarState = CarState::Static;
+	carLightOn = false;
 
 	carComponents.assign({
 		&carBody,
 		&carFrontLeftWheel,
 		&carFrontRightWheel,
 		&carBackLeftWheel,
-		&carBackRightWheel });
+		&carBackRightWheel,
+		&carLeftLight,
+		&carRightLight});
 
 	carWheels.assign({
 		&carFrontLeftWheel,
@@ -119,6 +122,38 @@ void Car::InitCarBackRightWheel(ComPtr<ID3D11Device> device) {
 	carBackRightWheel.SetMaterial(material);
 }
 
+void Car::InitCarLeftLight(ComPtr<ID3D11Device> device) {
+	ComPtr<ID3D11ShaderResourceView> texture;
+	Material material;
+	material.Ambient = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	material.Diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	material.Specular = XMFLOAT4(0.1f, 0.1f, 0.1f, 16.0f);
+	carLeftLight.translation = XMMatrixTranslation(-0.2f, -0.5f, 1.0f);
+	carLeftLight.modelMatrix = XMMatrixTranslation(-0.2f, -0.5f, 1.0f);
+	carLeftLight.SetWorldMatrix(carLeftLight.modelMatrix);
+
+	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
+	carLeftLight.SetModel(Model(device, Geometry::CreateSphere(0.05f)));
+	carLeftLight.SetTexture(texture);
+	carLeftLight.SetMaterial(material);
+}
+
+void Car::InitCarRightLight(ComPtr<ID3D11Device> device) {
+	ComPtr<ID3D11ShaderResourceView> texture;
+	Material material;
+	material.Ambient = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	material.Diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	material.Specular = XMFLOAT4(0.1f, 0.1f, 0.1f, 16.0f);
+	carRightLight.translation = XMMatrixTranslation(0.2f, -0.5f, 1.0f);
+	carRightLight.modelMatrix = XMMatrixTranslation(0.2f, -0.5f, 1.0f);
+	carRightLight.SetWorldMatrix(carRightLight.modelMatrix);
+
+	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
+	carRightLight.SetModel(Model(device, Geometry::CreateSphere(0.05f)));
+	carRightLight.SetTexture(texture);
+	carRightLight.SetMaterial(material);
+}
+
 void Car::SetCarMaterial(Material material) {
 	for (auto& car_item : carComponents)
 	{
@@ -143,12 +178,23 @@ DirectX::XMFLOAT3 Car::GetCarDirection() {
 	return carHeadDirection;
 }
 
+DirectX::XMFLOAT3 Car::GetCarLeftLightPosition() {
+	return carLeftLight.GetPosition();
+}
+
+DirectX::XMFLOAT3 Car::GetCarRightLightPosition() {
+	return carRightLight.GetPosition();
+}
+
 void Car::InitCar(ComPtr<ID3D11Device> device) {
 	InitCarBody(device);
 	InitCarFrontLeftWheel(device);
 	InitCarFrontRightWheel(device);
 	InitCarBackLeftWheel(device);
 	InitCarBackRightWheel(device);
+	InitCarLeftLight(device);
+	InitCarRightLight(device);
+
 }
 
 void Car::CarMove(float distance) {
@@ -219,8 +265,16 @@ void Car::SetCarStatic() {
 	mCarState = CarState::Static;
 }
 
+void Car::CarLightOnOff() {
+	carLightOn = !carLightOn;
+}
+
 Car::CarState Car::GetCarState() {
 	return mCarState;
+}
+
+bool Car::GetCarLightState() {
+	return carLightOn;
 }
 
 void Car::Draw(ComPtr<ID3D11DeviceContext> deviceContext, BasicEffect& effect) {

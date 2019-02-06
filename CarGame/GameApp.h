@@ -30,6 +30,8 @@ public:
 
 private:
 	bool InitResource();
+	void InitFirstPersonCamera();
+	void InitThirdPersonCamera();
 	void CreateRandomTrees();
 
 private:

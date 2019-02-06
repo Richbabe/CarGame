@@ -2,6 +2,9 @@
 #include "d3dUtil.h"
 using namespace DirectX;
 using namespace std::experimental;
+#include "iostream"
+#pragma warning(disable:4996)
+using namespace std;
 
 GameApp::GameApp(HINSTANCE hInstance)
 	: D3DApp(hInstance)
@@ -88,6 +91,41 @@ void GameApp::OnResize()
 	}
 }
 
+void GameApp::InitFirstPersonCamera() {
+	auto firstPersonCamera = std::dynamic_pointer_cast<FirstPersonCamera>(mCamera);
+	firstPersonCamera.reset(new FirstPersonCamera);
+	mCamera = firstPersonCamera;
+	firstPersonCamera->SetViewPort(0.0f, 0.0f, (float)mClientWidth, (float)mClientHeight);
+
+	XMFLOAT3 cameraPos = mCar.GetCarPosition();
+	cameraPos.y += 0.4f;
+
+	firstPersonCamera->LookTo(cameraPos, mCar.GetCarDirection(), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	mCameraMode = CameraMode::FirstPerson;
+	mCamera->UpdateViewMatrix();
+	mBasicEffect.SetViewMatrix(mCamera->GetViewMatrix());
+	mBasicEffect.SetEyePos(mCamera->GetPositionVector());
+	mCamera->SetFrustum(XM_PI / 3, AspectRatio(), 0.5f, 1000.0f);
+	mBasicEffect.SetProjMatrix(mCamera->GetProjMatrix());
+}
+
+void GameApp::InitThirdPersonCamera() {
+	auto thirdPersonCamera = std::dynamic_pointer_cast<ThirdPersonCamera>(mCamera);
+	thirdPersonCamera.reset(new ThirdPersonCamera);
+	mCamera = thirdPersonCamera;
+	thirdPersonCamera->RotateY(-XM_PIDIV2); // 初始化时朝汽车前方看
+	thirdPersonCamera->SetViewPort(0.0f, 0.0f, (float)mClientWidth, (float)mClientHeight);
+	thirdPersonCamera->SetTarget(mCar.GetCarPosition());
+	thirdPersonCamera->SetDistance(5.0f);
+	thirdPersonCamera->SetDistanceMinMax(2.0f, 14.0f);
+	mCameraMode = CameraMode::ThirdPerson;
+	mCamera->UpdateViewMatrix();
+	mBasicEffect.SetViewMatrix(mCamera->GetViewMatrix());
+	mBasicEffect.SetEyePos(mCamera->GetPositionVector());
+	mCamera->SetFrustum(XM_PI / 3, AspectRatio(), 0.5f, 1000.0f);
+	mBasicEffect.SetProjMatrix(mCamera->GetProjMatrix());
+}
+
 void GameApp::UpdateScene(float dt)
 {
 	
@@ -129,7 +167,9 @@ void GameApp::UpdateScene(float dt)
 	auto firstPersonCamera = std::dynamic_pointer_cast<FirstPersonCamera>(mCamera);
 	auto thirdPersonCamera = std::dynamic_pointer_cast<ThirdPersonCamera>(mCamera);
 	if (mCameraMode == CameraMode::FirstPerson) {
-		firstPersonCamera->LookTo(mCar.GetCarPosition(), mCar.GetCarDirection(), XMFLOAT3(0.0f, 1.0f, 0.0f));
+		XMFLOAT3 cameraPos = mCar.GetCarPosition();
+		cameraPos.y += 0.4f;
+		firstPersonCamera->LookTo(cameraPos, mCar.GetCarDirection(), XMFLOAT3(0.0f, 1.0f, 0.0f));
 	}
 	else {
 		// ******************
@@ -143,10 +183,19 @@ void GameApp::UpdateScene(float dt)
 		thirdPersonCamera->Approach(-mouseState.scrollWheelValue / 120 * 1.0f);
 	}
 	mCamera->UpdateViewMatrix();
-
 	mBasicEffect.SetViewMatrix(mCamera->GetViewMatrix());
 	mBasicEffect.SetEyePos(mCamera->GetPositionVector());
 
+	// 摄像机模式切换逻辑(按Q进行切换)
+	if (mKeyboardTracker.IsKeyPressed(Keyboard::Q)) {
+		if (mCameraMode == CameraMode::FirstPerson) {
+			InitThirdPersonCamera();
+		}
+		else if (mCameraMode == CameraMode::ThirdPerson) {
+			InitFirstPersonCamera();
+		}
+	}
+	
 	// 选择天空盒
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::D1))
 	{
@@ -156,10 +205,42 @@ void GameApp::UpdateScene(float dt)
 	{
 		mSkyBoxMode = SkyBoxMode::Sunset;
 	}
-	if (mKeyboardTracker.IsKeyPressed(Keyboard::D3))
-	{
-		mSkyBoxMode = SkyBoxMode::Desert;
+
+	// 按H打开关闭车灯
+	if (mKeyboardTracker.IsKeyPressed(Keyboard::H)) {
+		mCar.CarLightOnOff();
 	}
+
+	if (mCar.GetCarLightState()) {
+		// 左车灯
+		SpotLight carLeftLight;
+		carLeftLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
+		carLeftLight.Diffuse = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
+		carLeftLight.Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+		carLeftLight.Position = mCar.GetCarLeftLightPosition();
+		carLeftLight.Direction = mCar.GetCarDirection();
+		carLeftLight.Att = XMFLOAT3(1.0f, 0.0f, 0.0f);
+		carLeftLight.Spot = 8.0f;
+		carLeftLight.Range = 10.0f;
+		mBasicEffect.SetSpotLight(0, carLeftLight);
+
+		// 右车灯
+		SpotLight carRightLight;
+		carRightLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
+		carRightLight.Diffuse = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
+		carRightLight.Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+		carRightLight.Position = mCar.GetCarRightLightPosition();
+		carRightLight.Direction = mCar.GetCarDirection();
+		carRightLight.Att = XMFLOAT3(1.0f, 0.0f, 0.0f);
+		carRightLight.Spot = 8.0f;
+		carRightLight.Range = 10.0f;
+		mBasicEffect.SetSpotLight(1, carRightLight);
+	}
+	else {
+		mBasicEffect.SetSpotLight(0, SpotLight());
+		mBasicEffect.SetSpotLight(1, SpotLight());
+	}
+	
 	
 	// 退出程序，这里应向窗口发送销毁信息
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::Escape))
@@ -180,7 +261,7 @@ void GameApp::DrawScene()
 	// 是否开启视锥体裁剪
 	if (mEnableFrustumCulling)
 	{
-		acceptedData = Collision::FrustumCulling(mInstancedData, mTrees.GetLocalBoundingBox(),
+		acceptedData = Collision::FrustumCulling3(mInstancedData, mTrees.GetLocalBoundingBox(),
 			mCamera->GetViewMatrix(), mCamera->GetProjMatrix());
 	}
 	// 确定使用的数据集
@@ -282,16 +363,16 @@ void GameApp::DrawScene()
 	if (md2dRenderTarget != nullptr)
 	{
 		md2dRenderTarget->BeginDraw();
-		std::wstring text = L"切换摄像机模式: 1-第一人称 2-第三人称 3-自由视角\n"
-			"W/S/A/D 前进/后退/左平移/右平移 (第三人称无效)  Esc退出\n"
-			"鼠标移动控制视野 滚轮控制第三人称观察距离\n"
+		std::wstring text = L"按Q切换摄像机模式:\n"
+			"W/S/A/D 前进/后退/左转/右转  Esc退出\n"
+			"按H打开关闭车灯\n"
+			"按1：白天天空盒 按2：黄昏天空盒\n"
+			"鼠标移动控制视野 滚轮控制观察距离(第三人称模式下)\n"
 			"当前模式: ";
 		if (mCameraMode == CameraMode::FirstPerson)
-			text += L"第一人称(控制箱子移动)";
+			text += L"第一人称";
 		else if (mCameraMode == CameraMode::ThirdPerson)
 			text += L"第三人称";
-		else
-			text += L"自由视角";
 		md2dRenderTarget->DrawTextW(text.c_str(), (UINT32)text.length(), mTextFormat.Get(),
 			D2D1_RECT_F{ 0.0f, 0.0f, 600.0f, 200.0f }, mColorBrush.Get());
 		HR(md2dRenderTarget->EndDraw());
@@ -302,11 +383,9 @@ void GameApp::DrawScene()
 }
 
 
-
 bool GameApp::InitResource()
 {
-	// 默认开启视锥体裁剪和硬件实例化
-	mEnableInstancing = true;
+	// 默认开启视锥体裁剪
 	mEnableFrustumCulling = true;
 
 	// ******************
@@ -315,22 +394,22 @@ bool GameApp::InitResource()
 	
 	mDaylight = std::make_unique<SkyRender>(
 		md3dDevice, md3dImmediateContext,
-		L"Texture\\daylight.jpg",
+		L"Texture\\skybox\\daylight.jpg",
 		5000.0f);
 		
 	mSunset = std::make_unique<SkyRender>(
 		md3dDevice, md3dImmediateContext,
 		std::vector<std::wstring>{
-		L"Texture\\sunset_posX.bmp", L"Texture\\sunset_negX.bmp",
-			L"Texture\\sunset_posY.bmp", L"Texture\\sunset_negY.bmp",
-			L"Texture\\sunset_posZ.bmp", L"Texture\\sunset_negZ.bmp", },
+		L"Texture\\skybox\\sunset_posX.bmp", L"Texture\\skybox\\sunset_negX.bmp",
+			L"Texture\\skybox\\sunset_posY.bmp", L"Texture\\skybox\\sunset_negY.bmp",
+			L"Texture\\skybox\\sunset_posZ.bmp", L"Texture\\skybox\\sunset_negZ.bmp", },
 		5000.0f);
-
+	/*
 	mDesert = std::make_unique<SkyRender>(
 		md3dDevice, md3dImmediateContext,
 		L"Texture\\desertcube1024.dds",
 		5000.0f);
-	
+	*/
 	mSkyBoxMode = SkyBoxMode::Daylight;
 
 	// ******************
@@ -353,17 +432,18 @@ bool GameApp::InitResource()
 	mObjReader.Read(L"Model\\ground.mbo", L"Model\\ground.obj");
 	mGround.SetModel(Model(md3dDevice, mObjReader));
 	mGround.SetMaterial(material);
+	mGround.SetWorldMatrix(XMMatrixTranslation(0.0f, 1.0f, 0.0f));
 
 	// 初始化房屋模型
 	mObjReader.Read(L"Model\\house.mbo", L"Model\\house.obj");
 	mHouse.SetModel(Model(md3dDevice, mObjReader));
 	mHouse.SetMaterial(material);
 	// 获取房屋包围盒
-	XMMATRIX S = XMMatrixScaling(0.01f, 0.01f, 0.01f) * XMMatrixTranslation(0.0f, 0.0f, -2.0f);
+	XMMATRIX S = XMMatrixScaling(0.01f, 0.01f, 0.01f) * XMMatrixTranslation(0.0f, 0.0f, 1.0f);
 	BoundingBox houseBox = mHouse.GetLocalBoundingBox();
 	houseBox.Transform(houseBox, S);
 	// 让房屋底部紧贴地面
-	mHouse.SetWorldMatrix(S * XMMatrixTranslation(0.0f, -(houseBox.Center.y - houseBox.Extents.y + 2.0f), 0.0f));
+	mHouse.SetWorldMatrix(S * XMMatrixTranslation(0.0f, -(houseBox.Center.y - houseBox.Extents.y + 1.0f), 0.0f));
 
 	// 初始化墙体
 	mWalls.resize(5);
@@ -387,11 +467,11 @@ bool GameApp::InitResource()
 	mWalls[3].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
 	mWalls[4].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
 
-	mWalls[0].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(-7.0f, 3.0f, 10.0f));
-	mWalls[1].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(7.0f, 3.0f, 10.0f));
-	mWalls[2].SetWorldMatrix(XMMatrixRotationY(-XM_PIDIV2) * XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(10.0f, 3.0f, 0.0f));
-	mWalls[3].SetWorldMatrix(XMMatrixRotationX(XM_PIDIV2) * XMMatrixTranslation(0.0f, 3.0f, -10.0f));
-	mWalls[4].SetWorldMatrix(XMMatrixRotationY(XM_PIDIV2) * XMMatrixRotationZ(-XM_PIDIV2) * XMMatrixTranslation(-10.0f, 3.0f, 0.0f));
+	mWalls[0].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(-7.0f, 0.0f, 10.0f));
+	mWalls[1].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(7.0f, 0.0f, 10.0f));
+	mWalls[2].SetWorldMatrix(XMMatrixRotationY(-XM_PIDIV2) * XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(10.0f, 0.0f, 0.0f));
+	mWalls[3].SetWorldMatrix(XMMatrixRotationX(XM_PIDIV2) * XMMatrixTranslation(0.0f, 0.0f, -10.0f));
+	mWalls[4].SetWorldMatrix(XMMatrixRotationY(XM_PIDIV2) * XMMatrixRotationZ(-XM_PIDIV2) * XMMatrixTranslation(-10.0f, 0.0f, 0.0f));
 
 	// 初始化镜面
 	material.Ambient = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -400,7 +480,7 @@ bool GameApp::InitResource()
 	HR(CreateDDSTextureFromFile(md3dDevice.Get(), L"Texture\\ice.dds", nullptr, texture.ReleaseAndGetAddressOf()));
 	mMirror.SetModel(Model(md3dDevice,
 		Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), XMFLOAT2(1.0f, 1.0f))));
-	mMirror.SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(0.0f, 3.0f, 10.0f));
+	mMirror.SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(0.0f, 0.0f, 10.0f));
 	mMirror.SetTexture(texture);
 	mMirror.SetMaterial(material);
 
@@ -410,30 +490,9 @@ bool GameApp::InitResource()
 	// ******************
 	// 初始化摄像机
 	//
-	/*
-	// 初始化为第一人称摄像机
-	mCameraMode = CameraMode::FirstPerson;
-	auto camera = std::shared_ptr<FirstPersonCamera>(new FirstPersonCamera);
-	mCamera = camera;
-	camera->SetViewPort(0.0f, 0.0f, (float)mClientWidth, (float)mClientHeight);
-	camera->LookAt(mCar.GetCarPosition(), mCar.GetCarDirection(), XMFLOAT3(0.0f, 1.0f, 0.0f));
-	mCamera->UpdateViewMatrix();
-	*/
-	// 初始化为第三人称摄像机
-	mCameraMode = CameraMode::ThirdPerson;
-	auto camera = std::shared_ptr<ThirdPersonCamera>(new ThirdPersonCamera);
-	mCamera = camera;
-	camera->SetViewPort(0.0f, 0.0f, (float)mClientWidth, (float)mClientHeight);
-	camera->SetTarget(mCar.GetCarPosition());
-	camera->SetDistance(5.0f);
-	camera->SetDistanceMinMax(2.0f, 14.0f);
 	
-
-	mBasicEffect.SetViewMatrix(mCamera->GetViewMatrix());
-	mBasicEffect.SetEyePos(mCamera->GetPositionVector());
-
-	mCamera->SetFrustum(XM_PI / 3, AspectRatio(), 0.5f, 1000.0f);
-	mBasicEffect.SetProjMatrix(mCamera->GetProjMatrix());
+	// 初始化为第三人称摄像机
+	InitThirdPersonCamera();
 	
 
 	// ******************
@@ -482,9 +541,9 @@ void GameApp::CreateRandomTrees()
 	BoundingBox treeBox = mTrees.GetLocalBoundingBox();
 	// 获取树包围盒顶点
 	mTreeBoxData = Collision::CreateBoundingBox(treeBox, XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-	// 让树木底部紧贴地面位于y = -2的平面
+	// 让树木底部紧贴地面位于y = 1.0的平面
 	treeBox.Transform(treeBox, S);
-	XMMATRIX T0 = XMMatrixTranslation(0.0f, -(treeBox.Center.y - treeBox.Extents.y + 2.0f), 0.0f);
+	XMMATRIX T0 = XMMatrixTranslation(0.0f, -(treeBox.Center.y - treeBox.Extents.y + 1.0f), 0.0f);
 	/*
 	// 随机生成256颗随机朝向的树
 	float theta = 0.0f;
