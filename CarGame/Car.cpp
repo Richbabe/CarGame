@@ -132,9 +132,8 @@ void Car::InitCarLeftLight(ComPtr<ID3D11Device> device) {
 	carLeftLight.modelMatrix = XMMatrixTranslation(-0.2f, -0.5f, 1.0f);
 	carLeftLight.SetWorldMatrix(carLeftLight.modelMatrix);
 
-	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
 	carLeftLight.SetModel(Model(device, Geometry::CreateSphere(0.05f)));
-	carLeftLight.SetTexture(texture);
+	carLeftLight.SetTexture(CreateTexture(device, XMINT4(0, 0, 0, 255)));
 	carLeftLight.SetMaterial(material);
 }
 
@@ -148,9 +147,8 @@ void Car::InitCarRightLight(ComPtr<ID3D11Device> device) {
 	carRightLight.modelMatrix = XMMatrixTranslation(0.2f, -0.5f, 1.0f);
 	carRightLight.SetWorldMatrix(carRightLight.modelMatrix);
 
-	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
 	carRightLight.SetModel(Model(device, Geometry::CreateSphere(0.05f)));
-	carRightLight.SetTexture(texture);
+	carRightLight.SetTexture(CreateTexture(device, XMINT4(0, 0, 0, 255)));
 	carRightLight.SetMaterial(material);
 }
 
@@ -195,6 +193,53 @@ void Car::InitCar(ComPtr<ID3D11Device> device) {
 	InitCarLeftLight(device);
 	InitCarRightLight(device);
 
+}
+
+uint32_t ColorRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+	return (r | (g << 8) | (b << 16) | (a << 24));
+}
+
+Car::ComPtr<ID3D11ShaderResourceView> Car::CreateTexture(ComPtr<ID3D11Device> md3dDevice, XMINT4 color) {
+	uint32_t textureColor = ColorRGBA(color.x, color.y, color.z, color.w);
+	ComPtr<ID3D11ShaderResourceView> texture;
+
+	// 纹理内存映射，用白色初始化
+	std::vector<uint32_t> textureArrayMap(128 * 128, textureColor);
+	uint32_t(*textureMap)[128] = reinterpret_cast<uint32_t(*)[128]>(textureArrayMap.data());
+
+	// 创建纹理数组
+	D3D11_TEXTURE2D_DESC texArrayDesc;
+	texArrayDesc.Width = 128;
+	texArrayDesc.Height = 128;
+	texArrayDesc.MipLevels = 1;
+	texArrayDesc.ArraySize = 1;
+	texArrayDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texArrayDesc.SampleDesc.Count = 1;      // 不使用多重采样
+	texArrayDesc.SampleDesc.Quality = 0;
+	texArrayDesc.Usage = D3D11_USAGE_DEFAULT;
+	texArrayDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texArrayDesc.CPUAccessFlags = 0;
+	texArrayDesc.MiscFlags = 0; // 指定需要生成mipmap
+
+	D3D11_SUBRESOURCE_DATA sd;
+	uint32_t * pData = textureArrayMap.data();
+	sd.pSysMem = pData;
+	sd.SysMemPitch = 128 * sizeof(uint32_t);
+	sd.SysMemSlicePitch = 128 * 128 * sizeof(uint32_t);
+
+
+	ComPtr<ID3D11Texture2D> tex;
+	HR(md3dDevice->CreateTexture2D(&texArrayDesc, &sd, tex.GetAddressOf()));
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	HR(md3dDevice->CreateShaderResourceView(tex.Get(), &srvDesc, texture.GetAddressOf()));
+
+	return texture;
 }
 
 void Car::CarMove(float distance) {
@@ -265,8 +310,16 @@ void Car::SetCarStatic() {
 	mCarState = CarState::Static;
 }
 
-void Car::CarLightOnOff() {
+void Car::CarLightOnOff(ComPtr<ID3D11Device> md3dDevice) {
 	carLightOn = !carLightOn;
+	if (carLightOn) {
+		carLeftLight.SetTexture(CreateTexture(md3dDevice, XMINT4(255, 255, 255, 255)));
+		carRightLight.SetTexture(CreateTexture(md3dDevice, XMINT4(255, 255, 255, 255)));
+	}
+	else {
+		carLeftLight.SetTexture(CreateTexture(md3dDevice, XMINT4(0, 0, 0, 255)));
+		carRightLight.SetTexture(CreateTexture(md3dDevice, XMINT4(0, 0, 0, 255)));
+	}
 }
 
 Car::CarState Car::GetCarState() {

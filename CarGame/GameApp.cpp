@@ -117,7 +117,7 @@ void GameApp::InitThirdPersonCamera() {
 	thirdPersonCamera->SetViewPort(0.0f, 0.0f, (float)mClientWidth, (float)mClientHeight);
 	thirdPersonCamera->SetTarget(mCar.GetCarPosition());
 	thirdPersonCamera->SetDistance(5.0f);
-	thirdPersonCamera->SetDistanceMinMax(2.0f, 14.0f);
+	thirdPersonCamera->SetDistanceMinMax(3.0f, 10.0f);
 	mCameraMode = CameraMode::ThirdPerson;
 	mCamera->UpdateViewMatrix();
 	mBasicEffect.SetViewMatrix(mCamera->GetViewMatrix());
@@ -208,7 +208,7 @@ void GameApp::UpdateScene(float dt)
 
 	// 按H打开关闭车灯
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::H)) {
-		mCar.CarLightOnOff();
+		mCar.CarLightOnOff(md3dDevice);
 	}
 
 	if (mCar.GetCarLightState()) {
@@ -221,7 +221,7 @@ void GameApp::UpdateScene(float dt)
 		carLeftLight.Direction = mCar.GetCarDirection();
 		carLeftLight.Att = XMFLOAT3(1.0f, 0.0f, 0.0f);
 		carLeftLight.Spot = 8.0f;
-		carLeftLight.Range = 10.0f;
+		carLeftLight.Range = 50.0f;
 		mBasicEffect.SetSpotLight(0, carLeftLight);
 
 		// 右车灯
@@ -233,7 +233,7 @@ void GameApp::UpdateScene(float dt)
 		carRightLight.Direction = mCar.GetCarDirection();
 		carRightLight.Att = XMFLOAT3(1.0f, 0.0f, 0.0f);
 		carRightLight.Spot = 8.0f;
-		carRightLight.Range = 10.0f;
+		carRightLight.Range = 50.0f;
 		mBasicEffect.SetSpotLight(1, carRightLight);
 	}
 	else {

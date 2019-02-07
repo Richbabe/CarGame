@@ -22,6 +22,50 @@ XMFLOAT3 GameObject::GetPosition() const {
 	return XMFLOAT3(mWorldMatrix(3, 0), mWorldMatrix(3, 1), mWorldMatrix(3, 2));
 }
 
+uint32_t GameObject::ColorRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+	return (r | (g << 8) | (b << 16) | (a << 24));
+}
+
+void GameObject::InitTexture(ComPtr<ID3D11Device> md3dDevice) {
+	uint32_t white = ColorRGBA(255, 255, 255, 255);
+
+	// 纹理内存映射，用白色初始化
+	std::vector<uint32_t> textureArrayMap(128 * 128, white);
+	uint32_t(*textureMap)[128] = reinterpret_cast<uint32_t(*)[128]>(textureArrayMap.data());
+
+	// 创建纹理数组
+	D3D11_TEXTURE2D_DESC texArrayDesc;
+	texArrayDesc.Width = 128;
+	texArrayDesc.Height = 128;
+	texArrayDesc.MipLevels = 1;
+	texArrayDesc.ArraySize = 1;
+	texArrayDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texArrayDesc.SampleDesc.Count = 1;      // 不使用多重采样
+	texArrayDesc.SampleDesc.Quality = 0;
+	texArrayDesc.Usage = D3D11_USAGE_DEFAULT;
+	texArrayDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texArrayDesc.CPUAccessFlags = 0;
+	texArrayDesc.MiscFlags = 0; // 指定需要生成mipmap
+
+	D3D11_SUBRESOURCE_DATA sd;
+	uint32_t * pData = textureArrayMap.data();
+	sd.pSysMem = pData;
+	sd.SysMemPitch = 128 * sizeof(uint32_t);
+	sd.SysMemSlicePitch = 128 * 128 * sizeof(uint32_t);
+
+
+	ComPtr<ID3D11Texture2D> tex;
+	HR(md3dDevice->CreateTexture2D(&texArrayDesc, &sd, tex.GetAddressOf()));
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	HR(md3dDevice->CreateShaderResourceView(tex.Get(), &srvDesc, mTexture.GetAddressOf()));
+}
+
 void GameObject::SetTexture(ComPtr<ID3D11ShaderResourceView> texture) {
 	if (texture == nullptr) {
 		throw ERROR("aaaaaa");

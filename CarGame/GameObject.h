@@ -15,6 +15,10 @@ public:
 
 	// 获取位置
 	DirectX::XMFLOAT3 GetPosition() const;
+	// 返回32位的RGBA值
+	uint32_t ColorRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+	// 初始化纹理
+	void InitTexture(ComPtr<ID3D11Device> md3dDevice);
 	// 设置纹理
 	void SetTexture(ComPtr<ID3D11ShaderResourceView> texture);
 	// 设置材质

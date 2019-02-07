@@ -41,7 +41,7 @@ private:
 
 	std::vector<GameObject> mWalls;							// 墙壁
 	GameObject mMirror;										// 镜面
-	Car mCar;                                                // 汽车
+	Car mCar;                                               // 汽车
 	GameObject mHouse;										// 房屋
 	GameObject mGround;										// 地面
 
