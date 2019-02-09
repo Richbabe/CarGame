@@ -200,7 +200,7 @@ void BasicEffect::SetRenderDefault(ComPtr<ID3D11DeviceContext> deviceContext, Re
 	}
 
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	deviceContext->RSSetState(nullptr);
+	deviceContext->RSSetState(RenderStates::RSNoCull.Get());
 	deviceContext->PSSetSamplers(0, 1, RenderStates::SSLinearWrap.GetAddressOf());
 	deviceContext->OMSetDepthStencilState(nullptr, 0);
 	deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);

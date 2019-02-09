@@ -17,7 +17,7 @@ public:
 	enum class CameraMode { FirstPerson, ThirdPerson, Free };
 
 	// 天空盒模式
-	enum class SkyBoxMode { Daylight, Sunset, Desert };
+	enum class SkyBoxMode { Daylight, Sunset, Night };
 
 public:
 	GameApp(HINSTANCE hInstance);
@@ -32,6 +32,10 @@ private:
 	bool InitResource();
 	void InitFirstPersonCamera();
 	void InitThirdPersonCamera();
+	void InitDayLight();
+	void InitSunSetLight();
+	void InitNightLight();
+	void InitCarPort();
 	void CreateRandomTrees();
 
 private:
@@ -44,6 +48,7 @@ private:
 	Car mCar;                                               // 汽车
 	GameObject mHouse;										// 房屋
 	GameObject mGround;										// 地面
+	GameObject mRoad;                                       // 道路
 
 	GameObject mTrees;										// 树
 	std::vector<DirectX::XMMATRIX> mInstancedData;			// 树的实例数据
@@ -53,13 +58,11 @@ private:
 	Material mNormalMeterialMat;							// 普通材质
 
 	BasicEffect mBasicEffect;								// 对象渲染特效管理
-	bool mEnableFrustumCulling;								// 视锥体裁剪开启
-	bool mEnableInstancing;									// 硬件实例化开启
 
 	SkyEffect mSkyEffect;									// 天空盒特效管理
 	std::unique_ptr<SkyRender> mDaylight;					// 天空盒(白天)
 	std::unique_ptr<SkyRender> mSunset;						// 天空盒(日落)
-	std::unique_ptr<SkyRender> mDesert;						// 天空盒(沙漠)
+	std::unique_ptr<SkyRender> mNight;						// 天空盒(夜晚)
 	SkyBoxMode mSkyBoxMode;									// 天空盒模式
 
 	std::shared_ptr<Camera> mCamera;						// 摄像机

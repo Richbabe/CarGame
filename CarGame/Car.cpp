@@ -12,7 +12,7 @@ Car::CarComponet::CarComponet() {
 }
 
 Car::Car(){
-	carWorldPostition = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	carWorldPostition = XMFLOAT3(0.0f, 0.0f, -100.0f);
 	carHeadDirection = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	carRightDirection = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	mCarState = CarState::Static;
@@ -34,7 +34,7 @@ Car::Car(){
 		&carBackRightWheel });
 
 	rotation = XMMatrixIdentity();
-	translation = XMMatrixIdentity();
+	translation = XMMatrixTranslation(0.0f, 0.0f, -100.0f);
 }
 
 void Car::InitCarBody(ComPtr<ID3D11Device> device) {
@@ -48,7 +48,7 @@ void Car::InitCarBody(ComPtr<ID3D11Device> device) {
 	carBody.modelMatrix = XMMatrixTranslation(0.0f, -0.5f, 0.0f);
 	carBody.SetWorldMatrix(carBody.modelMatrix);
 
-	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\WoodCrate.dds", nullptr, texture.GetAddressOf()));
+	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\car\\car_body.dds", nullptr, texture.GetAddressOf()));
 	carBody.SetModel(Model(device, Geometry::CreateBox(0.8f, 0.8f, 2.0f)));
 	carBody.SetTexture(texture);
 	carBody.SetMaterial(material);
@@ -65,7 +65,7 @@ void Car::InitCarFrontLeftWheel(ComPtr<ID3D11Device> device) {
 	carFrontLeftWheel.modelMatrix = XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(-0.4f, -0.8f, 1.0f);
 	carFrontLeftWheel.SetWorldMatrix(carFrontLeftWheel.modelMatrix);
 
-	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
+	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\car\\car_wheel.dds", nullptr, texture.GetAddressOf()));
 	carFrontLeftWheel.SetModel(Model(device, Geometry::CreateCylinder(0.2f, 0.2f)));
 	carFrontLeftWheel.SetTexture(texture);
 	carFrontLeftWheel.SetMaterial(material);
@@ -82,7 +82,7 @@ void Car::InitCarFrontRightWheel(ComPtr<ID3D11Device> device) {
 	carFrontRightWheel.modelMatrix = XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(0.4f, -0.8f, 1.0f);
 	carFrontRightWheel.SetWorldMatrix(carFrontRightWheel.modelMatrix);
 
-	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
+	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\car\\car_wheel.dds", nullptr, texture.GetAddressOf()));
 	carFrontRightWheel.SetModel(Model(device, Geometry::CreateCylinder(0.2f, 0.2f)));
 	carFrontRightWheel.SetTexture(texture);
 	carFrontRightWheel.SetMaterial(material);
@@ -99,7 +99,7 @@ void Car::InitCarBackLeftWheel(ComPtr<ID3D11Device> device) {
 	carBackLeftWheel.modelMatrix = XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(-0.4f, -0.8f, -1.0f);
 	carBackLeftWheel.SetWorldMatrix(carBackLeftWheel.modelMatrix);
 
-	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
+	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\car\\car_wheel.dds", nullptr, texture.GetAddressOf()));
 	carBackLeftWheel.SetModel(Model(device, Geometry::CreateCylinder(0.2f, 0.2f)));
 	carBackLeftWheel.SetTexture(texture);
 	carBackLeftWheel.SetMaterial(material);
@@ -116,7 +116,7 @@ void Car::InitCarBackRightWheel(ComPtr<ID3D11Device> device) {
 	carBackRightWheel.modelMatrix = XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(0.4f, -0.8f, -1.0f);
 	carBackRightWheel.SetWorldMatrix(carBackRightWheel.modelMatrix);
 
-	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\brick.dds", nullptr, texture.GetAddressOf()));
+	HR(CreateDDSTextureFromFile(device.Get(), L"Texture\\car\\car_wheel.dds", nullptr, texture.GetAddressOf()));
 	carBackRightWheel.SetModel(Model(device, Geometry::CreateCylinder(0.2f, 0.2f)));
 	carBackRightWheel.SetTexture(texture);
 	carBackRightWheel.SetMaterial(material);

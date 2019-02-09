@@ -126,6 +126,81 @@ void GameApp::InitThirdPersonCamera() {
 	mBasicEffect.SetProjMatrix(mCamera->GetProjMatrix());
 }
 
+void GameApp::InitDayLight()
+{
+	DirectionalLight dirLight;
+	dirLight.Ambient = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	dirLight.Diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	dirLight.Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	dirLight.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	mBasicEffect.SetDirLight(0, dirLight);
+}
+
+void GameApp::InitSunSetLight()
+{
+	DirectionalLight dirLight;
+	dirLight.Ambient = XMFLOAT4(0.5f, 0.4f, 0.4f, 1.0f);
+	dirLight.Diffuse = XMFLOAT4(0.6f, 0.5f, 0.5f, 1.0f);
+	dirLight.Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	dirLight.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	mBasicEffect.SetDirLight(0, dirLight);
+}
+
+void GameApp::InitNightLight()
+{
+	DirectionalLight dirLight;
+	dirLight.Ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	dirLight.Diffuse = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
+	dirLight.Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	dirLight.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	mBasicEffect.SetDirLight(0, dirLight);
+}
+
+void GameApp::InitCarPort() {
+	ComPtr<ID3D11ShaderResourceView> texture;
+	Material material;
+	material.Ambient = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	material.Diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	material.Specular = XMFLOAT4(0.1f, 0.1f, 0.1f, 16.0f);
+	// 初始化车库墙体
+	mWalls.resize(5);
+	HR(CreateDDSTextureFromFile(md3dDevice.Get(), L"Texture\\wall\\wall.dds", nullptr, texture.ReleaseAndGetAddressOf()));
+	// 这里控制墙体五个面的生成
+	//     ____     ____
+	//    /| 0 |   | 1 |\
+	//   /4|___|___|___|2\
+	//  /_/_ _ _ _ _ _ _\_\
+	// | /       3       \ |
+	// |/_________________\|
+	//
+	for (int i = 0; i < 5; ++i)
+	{
+		mWalls[i].SetMaterial(material);
+		mWalls[i].SetTexture(texture);
+	}
+	mWalls[0].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f))));
+	mWalls[1].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f))));
+	mWalls[2].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
+	mWalls[3].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
+	mWalls[4].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
+
+	mWalls[0].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(-7.0f, 0.0f, 10.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
+	mWalls[1].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(7.0f, 0.0f, 10.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
+	mWalls[2].SetWorldMatrix(XMMatrixRotationY(-XM_PIDIV2) * XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(10.0f, 0.0f, 0.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
+	mWalls[3].SetWorldMatrix(XMMatrixRotationX(XM_PIDIV2) * XMMatrixTranslation(0.0f, 0.0f, -10.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
+	mWalls[4].SetWorldMatrix(XMMatrixRotationY(XM_PIDIV2) * XMMatrixRotationZ(-XM_PIDIV2) * XMMatrixTranslation(-10.0f, 0.0f, 0.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
+
+	// 初始化车库点光源
+	PointLight pointLight;
+	pointLight.Position = XMFLOAT3(0.0f, 10.0f, -100.0f);
+	pointLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
+	pointLight.Diffuse = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
+	pointLight.Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	pointLight.Att = XMFLOAT3(0.0f, 0.1f, 0.0f);
+	pointLight.Range = 18.0f;
+	mBasicEffect.SetPointLight(0, pointLight);
+}
+
 void GameApp::UpdateScene(float dt)
 {
 	
@@ -200,10 +275,17 @@ void GameApp::UpdateScene(float dt)
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::D1))
 	{
 		mSkyBoxMode = SkyBoxMode::Daylight;
+		GameApp::InitDayLight();
 	}
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::D2))
 	{
 		mSkyBoxMode = SkyBoxMode::Sunset;
+		GameApp::InitSunSetLight();
+	}
+	if (mKeyboardTracker.IsKeyPressed(Keyboard::D3))
+	{
+		mSkyBoxMode = SkyBoxMode::Night;
+		GameApp::InitNightLight();
 	}
 
 	// 按H打开关闭车灯
@@ -256,69 +338,11 @@ void GameApp::DrawScene()
 	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView.Get(), reinterpret_cast<const float*>(&Colors::Silver));
 	md3dImmediateContext->ClearDepthStencilView(mDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	// 统计实际绘制的物体数目
-	std::vector<XMMATRIX> acceptedData;
-	// 是否开启视锥体裁剪
-	if (mEnableFrustumCulling)
-	{
-		acceptedData = Collision::FrustumCulling3(mInstancedData, mTrees.GetLocalBoundingBox(),
-			mCamera->GetViewMatrix(), mCamera->GetProjMatrix());
-	}
 	// 确定使用的数据集
-	const std::vector<XMMATRIX>& refData = mEnableFrustumCulling ? acceptedData : mInstancedData;
-
-	// *********************
-	// 1. 给镜面反射区域写入值1到模板缓冲区
-	// 
-
-	mBasicEffect.SetWriteStencilOnly(md3dImmediateContext, 1, BasicEffect::RenderObject);
-	mMirror.Draw(md3dImmediateContext, mBasicEffect);
-
-	// ***********************
-	// 2. 绘制不透明的反射物体
-	//
-
-	// 开启反射绘制
-	mBasicEffect.SetReflectionState(true);
-	mBasicEffect.SetRenderDefaultWithStencil(md3dImmediateContext, 1, BasicEffect::RenderObject);
-
-	mWalls[2].Draw(md3dImmediateContext, mBasicEffect);
-	mWalls[3].Draw(md3dImmediateContext, mBasicEffect);
-	mWalls[4].Draw(md3dImmediateContext, mBasicEffect);
-
-	mCar.Draw(md3dImmediateContext, mBasicEffect);
-	mGround.Draw(md3dImmediateContext, mBasicEffect);
-	mHouse.Draw(md3dImmediateContext, mBasicEffect);
-
-	// ***********************
-	// 3. 绘制不透明反射物体的阴影
-	//
-
-	mCar.SetCarMaterial(mShadowMat);
-	mHouse.SetMaterial(mShadowMat);
-	mBasicEffect.SetShadowState(true);	// 反射开启，阴影开启			
-	mBasicEffect.SetRenderNoDoubleBlend(md3dImmediateContext, 1, BasicEffect::RenderObject);
-
-	mCar.Draw(md3dImmediateContext, mBasicEffect);
-	mHouse.Draw(md3dImmediateContext, mBasicEffect);
-
-	// 恢复到原来的状态
-	mBasicEffect.SetShadowState(false);
-	mCar.SetCarMaterial(mNormalMeterialMat);
-	mHouse.SetMaterial(mNormalMeterialMat);
-
-	// ***********************
-	// 4. 绘制透明镜面
-	//
-
-	// 关闭反射绘制
-	mBasicEffect.SetReflectionState(false);
-	mBasicEffect.SetRenderAlphaBlendWithStencil(md3dImmediateContext, 1, BasicEffect::RenderObject);
-
-	mMirror.Draw(md3dImmediateContext, mBasicEffect);
+	const std::vector<XMMATRIX>& refData = mInstancedData;
 
 	// ************************
-	// 5. 绘制不透明的正常物体
+	// 绘制不透明的正常物体
 	//
 	mBasicEffect.SetRenderDefault(md3dImmediateContext, BasicEffect::RenderObject);
 
@@ -327,34 +351,32 @@ void GameApp::DrawScene()
 	mCar.Draw(md3dImmediateContext, mBasicEffect);
 	mGround.Draw(md3dImmediateContext, mBasicEffect);
 	mHouse.Draw(md3dImmediateContext, mBasicEffect);
+	mRoad.Draw(md3dImmediateContext, mBasicEffect);
 
 	mBasicEffect.SetRenderDefault(md3dImmediateContext, BasicEffect::RenderInstance);
 	mTrees.DrawInstanced(md3dImmediateContext, mBasicEffect, refData);
 
 
 	// ************************
-	// 6. 绘制不透明正常物体的阴影
+	// 绘制不透明正常物体的阴影
 	//
 	mCar.SetCarMaterial(mShadowMat);
-	mHouse.SetMaterial(mShadowMat);
 
-	mBasicEffect.SetShadowState(true);	// 反射关闭，阴影开启
+	mBasicEffect.SetShadowState(true);	// 阴影开启
 	mBasicEffect.SetRenderNoDoubleBlend(md3dImmediateContext, 0, BasicEffect::RenderObject);
 
 	mCar.Draw(md3dImmediateContext, mBasicEffect);
-	mHouse.Draw(md3dImmediateContext, mBasicEffect);
 
 	mBasicEffect.SetShadowState(false);		// 阴影关闭
 	mCar.SetCarMaterial(mNormalMeterialMat);
-	mHouse.SetMaterial(mNormalMeterialMat);
 
 	// 绘制天空盒
 	mSkyEffect.SetRenderDefault(md3dImmediateContext);
 	switch (mSkyBoxMode)
 	{
-	case SkyBoxMode::Daylight: mDaylight->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
-	case SkyBoxMode::Sunset: mSunset->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
-	case SkyBoxMode::Desert: mDesert->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
+		case SkyBoxMode::Daylight: mDaylight->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
+		case SkyBoxMode::Sunset: mSunset->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
+		case SkyBoxMode::Night: mNight->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
 	}
 
 	// ******************
@@ -366,8 +388,9 @@ void GameApp::DrawScene()
 		std::wstring text = L"按Q切换摄像机模式:\n"
 			"W/S/A/D 前进/后退/左转/右转  Esc退出\n"
 			"按H打开关闭车灯\n"
-			"按1：白天天空盒 按2：黄昏天空盒\n"
+			"按1：白天天空盒 按2：黄昏天空盒 按3：夜晚天空盒\n"
 			"鼠标移动控制视野 滚轮控制观察距离(第三人称模式下)\n"
+			"Alt+Enter 全屏\n"
 			"当前模式: ";
 		if (mCameraMode == CameraMode::FirstPerson)
 			text += L"第一人称";
@@ -385,13 +408,8 @@ void GameApp::DrawScene()
 
 bool GameApp::InitResource()
 {
-	// 默认开启视锥体裁剪
-	mEnableFrustumCulling = true;
-
 	// ******************
 	// 初始化天空盒相关
-
-	
 	mDaylight = std::make_unique<SkyRender>(
 		md3dDevice, md3dImmediateContext,
 		L"Texture\\skybox\\daylight.jpg",
@@ -404,12 +422,12 @@ bool GameApp::InitResource()
 			L"Texture\\skybox\\sunset_posY.bmp", L"Texture\\skybox\\sunset_negY.bmp",
 			L"Texture\\skybox\\sunset_posZ.bmp", L"Texture\\skybox\\sunset_negZ.bmp", },
 		5000.0f);
-	/*
-	mDesert = std::make_unique<SkyRender>(
+	
+	mNight = std::make_unique<SkyRender>(
 		md3dDevice, md3dImmediateContext,
-		L"Texture\\desertcube1024.dds",
+		L"Texture\\skybox\\night.dds",
 		5000.0f);
-	*/
+	
 	mSkyBoxMode = SkyBoxMode::Daylight;
 
 	// ******************
@@ -427,6 +445,7 @@ bool GameApp::InitResource()
 
 	// 初始化汽车
 	mCar.InitCar(md3dDevice);
+	mCar.SetCarWorldMatrix(XMMatrixTranslation(0.0f, 0.0f, -100.0f));
 
 	// 初始化地板
 	mObjReader.Read(L"Model\\ground.mbo", L"Model\\ground.obj");
@@ -439,50 +458,22 @@ bool GameApp::InitResource()
 	mHouse.SetModel(Model(md3dDevice, mObjReader));
 	mHouse.SetMaterial(material);
 	// 获取房屋包围盒
-	XMMATRIX S = XMMatrixScaling(0.01f, 0.01f, 0.01f) * XMMatrixTranslation(0.0f, 0.0f, 1.0f);
+	XMMATRIX S = XMMatrixScaling(0.05f, 0.05f, 0.05f) * XMMatrixTranslation(0.0f, 0.0f, 100.0f);
 	BoundingBox houseBox = mHouse.GetLocalBoundingBox();
 	houseBox.Transform(houseBox, S);
 	// 让房屋底部紧贴地面
 	mHouse.SetWorldMatrix(S * XMMatrixTranslation(0.0f, -(houseBox.Center.y - houseBox.Extents.y + 1.0f), 0.0f));
 
-	// 初始化墙体
-	mWalls.resize(5);
-	HR(CreateDDSTextureFromFile(md3dDevice.Get(), L"Texture\\brick.dds", nullptr, texture.ReleaseAndGetAddressOf()));
-	// 这里控制墙体五个面的生成，0和1的中间位置用于放置镜面
-	//     ____     ____
-	//    /| 0 |   | 1 |\
-	//   /4|___|___|___|2\
-	//  /_/_ _ _ _ _ _ _\_\
-	// | /       3       \ |
-	// |/_________________\|
-	//
-	for (int i = 0; i < 5; ++i)
-	{
-		mWalls[i].SetMaterial(material);
-		mWalls[i].SetTexture(texture);
-	}
-	mWalls[0].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f))));
-	mWalls[1].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f))));
-	mWalls[2].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
-	mWalls[3].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
-	mWalls[4].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
+	// 初始化车库
+	GameApp::InitCarPort();
 
-	mWalls[0].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(-7.0f, 0.0f, 10.0f));
-	mWalls[1].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(7.0f, 0.0f, 10.0f));
-	mWalls[2].SetWorldMatrix(XMMatrixRotationY(-XM_PIDIV2) * XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(10.0f, 0.0f, 0.0f));
-	mWalls[3].SetWorldMatrix(XMMatrixRotationX(XM_PIDIV2) * XMMatrixTranslation(0.0f, 0.0f, -10.0f));
-	mWalls[4].SetWorldMatrix(XMMatrixRotationY(XM_PIDIV2) * XMMatrixRotationZ(-XM_PIDIV2) * XMMatrixTranslation(-10.0f, 0.0f, 0.0f));
-
-	// 初始化镜面
-	material.Ambient = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.5f);
-	material.Specular = XMFLOAT4(0.4f, 0.4f, 0.4f, 16.0f);
-	HR(CreateDDSTextureFromFile(md3dDevice.Get(), L"Texture\\ice.dds", nullptr, texture.ReleaseAndGetAddressOf()));
-	mMirror.SetModel(Model(md3dDevice,
-		Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), XMFLOAT2(1.0f, 1.0f))));
-	mMirror.SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(0.0f, 0.0f, 10.0f));
-	mMirror.SetTexture(texture);
-	mMirror.SetMaterial(material);
+	// 初始化道路
+	HR(CreateDDSTextureFromFile(md3dDevice.Get(), L"Texture\\Plane\\road.dds", nullptr, texture.ReleaseAndGetAddressOf()));
+	mRoad.SetModel(Model(md3dDevice,
+		Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(180.0f, 8.0f), XMFLOAT2(10.0f, 1.0f))));
+	mRoad.SetWorldMatrix(XMMatrixRotationY(-XM_PIDIV2) * XMMatrixTranslation(0.0f, -0.999f, 0.0f));
+	mRoad.SetTexture(texture);
+	mRoad.SetMaterial(material);
 
 	// 创建随机的树
 	CreateRandomTrees();
@@ -504,28 +495,16 @@ bool GameApp::InitResource()
 	mBasicEffect.SetShadowMatrix(XMMatrixShadow(XMVectorSet(0.0f, 1.0f, 0.0f, 0.99f), XMVectorSet(0.0f, 10.0f, -10.0f, 1.0f)));
 	mBasicEffect.SetRefShadowMatrix(XMMatrixShadow(XMVectorSet(0.0f, 1.0f, 0.0f, 0.99f), XMVectorSet(0.0f, 10.0f, 30.0f, 1.0f)));
 
-	// 环境光
-	DirectionalLight dirLight;
-	dirLight.Ambient = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	dirLight.Diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
-	dirLight.Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	dirLight.Direction = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	mBasicEffect.SetDirLight(0, dirLight);
-	// 灯光
-	PointLight pointLight;
-	pointLight.Position = XMFLOAT3(0.0f, 10.0f, -10.0f);
-	pointLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
-	pointLight.Diffuse = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
-	pointLight.Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
-	pointLight.Att = XMFLOAT3(0.0f, 0.1f, 0.0f);
-	pointLight.Range = 25.0f;
-	mBasicEffect.SetPointLight(0, pointLight);
+	// 初始化平行环境光
+	GameApp::InitDayLight();
 
 	return true;
 }
 
 void GameApp::CreateRandomTrees()
 {
+	vector<pair<float,float>> temp;  // 用于排除重复坐标
+
 	srand((unsigned)time(nullptr));
 	Material material;
 	material.Ambient = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
@@ -544,35 +523,41 @@ void GameApp::CreateRandomTrees()
 	// 让树木底部紧贴地面位于y = 1.0的平面
 	treeBox.Transform(treeBox, S);
 	XMMATRIX T0 = XMMatrixTranslation(0.0f, -(treeBox.Center.y - treeBox.Extents.y + 1.0f), 0.0f);
-	/*
-	// 随机生成256颗随机朝向的树
-	float theta = 0.0f;
-	for (int i = 0; i < 16; ++i)
-	{
-		// 取5-125的半径放置随机的树
-		for (int j = 0; j < 4; ++j)
-		{
-			// 距离越远，树木越多
-			for (int k = 0; k < 2 * j + 1; ++k)
-			{
-				float radius = (float)(rand() % 30 + 30 * j + 5);
-				float randomRad = rand() % 256 / 256.0f * XM_2PI / 16;
-				XMMATRIX T1 = XMMatrixTranslation(radius * cosf(theta + randomRad), 0.0f, radius * sinf(theta + randomRad));
-				XMMATRIX R = XMMatrixRotationY(rand() % 256 / 256.0f * XM_2PI);
-				XMMATRIX World = S * R * T0 * T1;
-				mInstancedData.push_back(World);
-			}
-		}
-		theta += XM_2PI / 16;
-	}
-	*/
 
+	// 在道路右边随机生成256棵树
 	for (int i = 0; i < 256; ++i) {
-		XMMATRIX T1 = XMMatrixTranslation(-5.0f, 0.0f, i * 2);
+		float x = (rand() % (100 - 6 + 1)) + 6;  // 生成[6,100]之间的随机数作为树的x坐标
+		float z = (rand() % (90 + 90 + 1)) - 90;  // 生成[-90,90]之间的随机数作为树的z坐标
+		// 如果有重复坐标则重新生成
+		while (find(temp.begin(), temp.end(), make_pair(x, z)) != temp.end()) {
+			x = (rand() % (100 - 6 + 1)) + 6;  // 生成[5,100]之间的随机数作为树的x坐标
+			z = (rand() % (90 + 90 + 1)) - 90;  // 生成[-90,90]之间的随机数作为树的z坐标
+		}
+		temp.push_back(make_pair(x, z));
+		XMMATRIX T1 = XMMatrixTranslation(x, 0.0f, z);
 		XMMATRIX R = XMMatrixRotationY(rand() % 256 / 256.0f * XM_2PI);
 		XMMATRIX World = S * R * T0 * T1;
 		mInstancedData.push_back(World);
 	}
 
+	temp.clear();
+	
+	// 在道路左边随机生成256棵树
+	for (int i = 0; i < 256; ++i) {
+		float x = (rand() % (100 - 6 + 1)) + 6;  // 生成[6,100]之间的随机数作为树的x坐标
+		float z = (rand() % (90 + 90 + 1)) - 90;  // 生成[-90,90]之间的随机数作为树的z坐标
+		// 如果有重复坐标则重新生成
+		while (find(temp.begin(), temp.end(), make_pair(x, z)) != temp.end()) {
+			x = (rand() % (100 - 6 + 1)) + 6;  // 生成[5,100]之间的随机数作为树的x坐标
+			z = (rand() % (90 + 90 + 1)) - 90;  // 生成[-90,90]之间的随机数作为树的z坐标
+		}
+		temp.push_back(make_pair(x, z));
+
+		XMMATRIX T1 = XMMatrixTranslation(-x, 0.0f, z);
+		XMMATRIX R = XMMatrixRotationY(rand() % 256 / 256.0f * XM_2PI);
+		XMMATRIX World = S * R * T0 * T1;
+		mInstancedData.push_back(World);
+	}
+	
 }
 
