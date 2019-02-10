@@ -29,14 +29,19 @@ public:
 	void DrawScene();
 
 private:
-	bool InitResource();
-	void InitFirstPersonCamera();
-	void InitThirdPersonCamera();
-	void InitDayLight();
-	void InitSunSetLight();
-	void InitNightLight();
-	void InitCarPort();
-	void CreateRandomTrees();
+	bool InitResource();                          // 初始化资源函数
+	void InitMaterial();                          // 初始化材质
+	void InitFirstPersonCamera();                 // 初始化第一人称摄像机
+	void InitThirdPersonCamera();                 // 初始化第三人称摄像机
+	void InitDayLight();                          // 初始化白天环境光
+	void InitSunSetLight();                       // 初始化黄昏环境光
+	void InitNightLight();                        // 初始化夜晚环境光
+	void InitCarPort();                           // 初始化车库
+	void InitHouse();                             // 初始化房子
+	void InitCar();                               // 初始化汽车
+	void InitSkyBox();                            // 初始化天空盒
+	void InitTree();                              // 初始化树木
+	void InitPlane();                             // 初始化地形
 
 private:
 	ComPtr<ID2D1SolidColorBrush> mColorBrush;	// 单色笔刷
@@ -49,6 +54,12 @@ private:
 	GameObject mHouse;										// 房屋
 	GameObject mGround;										// 地面
 	GameObject mRoad;                                       // 道路
+
+	DirectionalLight mDirectionalLight;                     // 平行环境光
+	PointLight mCarPortLight;                               // 车库点光源
+	PointLight mHouseLight;                                 // 房子点光源
+	SpotLight mCarLeftLight;                                // 汽车左前灯
+	SpotLight mCarRightLight;                               // 汽车右前灯     
 
 	GameObject mTrees;										// 树
 	std::vector<DirectX::XMMATRIX> mInstancedData;			// 树的实例数据
