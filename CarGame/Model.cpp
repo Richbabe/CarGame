@@ -26,6 +26,8 @@ void Model::SetModel(ComPtr<ID3D11Device> device, const ObjReader & model)
 
 	// ´´½¨°üÎ§ºÐ
 	BoundingBox::CreateFromPoints(boundingBox, XMLoadFloat3(&model.vMin), XMLoadFloat3(&model.vMax));
+	vMin = model.vMin;
+	vMax = model.vMax;
 
 	for (size_t i = 0; i < model.objParts.size(); ++i)
 	{
@@ -139,6 +141,14 @@ void Model::SetMesh(ComPtr<ID3D11Device> device, const void * vertices, UINT ver
 
 }
 
+
+DirectX::XMFLOAT3 Model::GetMinPoint() {
+	return vMin;
+}
+
+DirectX::XMFLOAT3 Model::GetMaxPoint() {
+	return vMax;
+}
 
 
 

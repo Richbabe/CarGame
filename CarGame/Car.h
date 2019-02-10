@@ -37,6 +37,7 @@ public:
 
 	void SetCarMaterial(Material material);                 // 设置汽车整体材质
 	void SetCarWorldMatrix(DirectX::XMMATRIX worldMatrix);  // 设置汽车的世界矩阵
+	DirectX::XMMATRIX GetCarWorldMatrix();                               // 获取汽车的世界矩阵
 	DirectX::XMFLOAT3 GetCarPosition();                     // 获得汽车在世界坐标系下的位置函数
   	DirectX::XMFLOAT3 GetCarDirection();                    // 获得汽车方向函数
 	DirectX::XMFLOAT3 GetCarLeftLightPosition();            // 获得汽车左车灯世界坐标函数
@@ -52,6 +53,11 @@ public:
 	void CarLightOnOff(ComPtr<ID3D11Device> md3dDevice);      // 开关车灯
 	CarState GetCarState();    // 获取汽车当前状态
 	bool GetCarLightState();   // 获取当前车灯状态
+
+	// 获取包围盒
+	DirectX::BoundingBox GetLocalBoundingBox() const;                // 获取局部坐标系的AABB包围盒
+	DirectX::BoundingBox GetBoundingBox() const;                     // 获取世界坐标系的AABB包围盒
+	DirectX::BoundingOrientedBox GetBoundingOrientedBox() const;     // 获取世界坐标系的OBB包围盒
 
 	void Draw(ComPtr<ID3D11DeviceContext> deviceContext, BasicEffect& effect);
 
@@ -75,6 +81,9 @@ private:
 
 	CarState mCarState;  // 汽车状态
 	bool carLightOn;     // 汽车车灯是否亮着
+
+	DirectX::XMFLOAT3 vMin, vMax;					// AABB盒双顶点
+	DirectX::BoundingBox boundingBox;               // 汽车包围盒
 };
 
 #endif

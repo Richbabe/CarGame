@@ -7,11 +7,14 @@
 
 #include <DirectXCollision.h>
 #include <vector>
+#include "Effects.h"
 #include "Vertex.h"
 
 class Collision
 {
 public:
+	template<class T>
+	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	// 线框顶点/索引数组
 	struct WireFrameData
@@ -47,9 +50,17 @@ public:
 	static std::vector<DirectX::XMMATRIX> XM_CALLCONV FrustumCulling3(
 		const std::vector<DirectX::XMMATRIX>& Matrices, const DirectX::BoundingBox& localBox, DirectX::FXMMATRIX View, DirectX::CXMMATRIX Proj);
 
+	// 绘制包围盒
+	void Draw(ComPtr<ID3D11Device> device, WireFrameData wireFrameData, ComPtr<ID3D11DeviceContext> deviceContext, BoundingBoxEffect& boundingBoxEffect, DirectX::FXMMATRIX WVP);
+
 private:
 	// 根据包围盒顶点构造包围盒
 	static WireFrameData CreateFromCorners(const DirectX::XMFLOAT3(&corners)[8], const DirectX::XMFLOAT4& color);
+
+	ComPtr<ID3D11Buffer> mVertexBuffer;  // 顶点缓冲区
+	ComPtr<ID3D11Buffer> mIndexBuffer;   // 索引缓冲区
+
+	UINT mIndexCount;                    // 顶点数量
 };
 
 

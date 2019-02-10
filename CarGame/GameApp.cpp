@@ -29,6 +29,9 @@ bool GameApp::Init()
 	if (!mSkyEffect.InitAll(md3dDevice))
 		return false;
 
+	if (!mBoundingBoxEffect.InitAll(md3dDevice))
+		return false;
+
 	if (!InitResource())
 		return false;
 
@@ -230,6 +233,8 @@ void GameApp::InitHouse() {
 	// 获取房屋包围盒
 	XMMATRIX S = XMMatrixScaling(0.05f, 0.05f, 0.05f) * XMMatrixTranslation(0.0f, 0.0f, 100.0f);
 	BoundingBox houseBox = mHouse.GetLocalBoundingBox();
+	// 获取房子包围盒顶点
+	mHouseBoxData = Collision::CreateBoundingBox(houseBox, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
 	houseBox.Transform(houseBox, S);
 	// 让房屋底部紧贴地面
 	mHouse.SetWorldMatrix(S * XMMatrixTranslation(0.0f, -(houseBox.Center.y - houseBox.Extents.y + 1.0f), 0.0f));
@@ -247,6 +252,11 @@ void GameApp::InitHouse() {
 void GameApp::InitCar() {
 	mCar.InitCar(md3dDevice);
 	mCar.SetCarWorldMatrix(XMMatrixTranslation(0.0f, 0.0f, -100.0f));
+
+	// 获取汽车包围盒
+	BoundingBox carBox = mCar.GetLocalBoundingBox();
+	// 获取房子包围盒顶点
+	mCarBoxData = Collision::CreateBoundingBox(carBox, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
 
 	// 初始化左车灯
 	mCarLeftLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
@@ -368,6 +378,8 @@ void GameApp::InitTree()
 
 bool GameApp::InitResource()
 {
+	mRenderBox = false;  // 默认不渲染碰撞盒
+
 	// ********初始化天空盒********
 	GameApp::InitSkyBox();
 
@@ -515,6 +527,22 @@ void GameApp::UpdateScene(float dt)
 		mBasicEffect.SetSpotLight(0, SpotLight());
 		mBasicEffect.SetSpotLight(1, SpotLight());
 	}
+
+	// 按B打开关闭碰撞盒渲染
+	if (mKeyboardTracker.IsKeyPressed(Keyboard::B)) {
+		mRenderBox = !mRenderBox;
+	}
+
+	// 碰撞检测
+	if (mCar.GetBoundingBox().Intersects(mHouse.GetBoundingBox())) {
+		mIsCollision = true;
+
+		mCar.SetCarMoveBack();
+		mCar.CarMove(dt * -50.0f);
+	}
+	else {
+		mIsCollision = false;
+	}
 	
 	// 退出程序，这里应向窗口发送销毁信息
 	if (mKeyboardTracker.IsKeyPressed(Keyboard::Escape))
@@ -571,6 +599,18 @@ void GameApp::DrawScene()
 		case SkyBoxMode::Night: mNight->Draw(md3dImmediateContext, mSkyEffect, *mCamera); break;
 	}
 
+	// ************************
+	if (mRenderBox) {
+		// 绘制包围盒
+		mBoundingBoxEffect.SetRenderDefault(md3dImmediateContext);
+		// 绘制房子包围盒
+		XMMATRIX WVP = mHouse.GetWorldMatrix() * mCamera->GetViewMatrix() * mCamera->GetProjMatrix();
+		mCollision.Draw(md3dDevice, mHouseBoxData, md3dImmediateContext, mBoundingBoxEffect, WVP);
+		// 绘制汽车包围盒
+		WVP = mCar.GetCarWorldMatrix() * mCamera->GetViewMatrix() * mCamera->GetProjMatrix();
+		mCollision.Draw(md3dDevice, mCarBoxData, md3dImmediateContext, mBoundingBoxEffect, WVP);
+	}
+
 	// ******************
 	// 绘制Direct2D部分
 	//
@@ -579,15 +619,19 @@ void GameApp::DrawScene()
 		md2dRenderTarget->BeginDraw();
 		std::wstring text = L"按Q切换摄像机模式:\n"
 			"W/S/A/D 前进/后退/左转/右转\n"
-			"按H打开关闭车灯\n"
+			"按H打开关闭车灯 按B打开关闭碰撞盒的渲染\n"
 			"按1：白天天空盒 按2：黄昏天空盒 按3：夜晚天空盒\n"
 			"鼠标移动控制视野 滚轮控制观察距离(第三人称模式下)\n"
 			"Alt+Enter：全屏  Esc：退出\n"
 			"当前模式: ";
 		if (mCameraMode == CameraMode::FirstPerson)
-			text += L"第一人称";
+			text += L"第一人称\n";
 		else if (mCameraMode == CameraMode::ThirdPerson)
-			text += L"第三人称";
+			text += L"第三人称\n";
+		if (mIsCollision)
+			text += L"发生碰撞！";
+		else
+			text += L"未发生碰撞！";
 		md2dRenderTarget->DrawTextW(text.c_str(), (UINT32)text.length(), mTextFormat.Get(),
 			D2D1_RECT_F{ 0.0f, 0.0f, 600.0f, 200.0f }, mColorBrush.Get());
 		HR(md2dRenderTarget->EndDraw());

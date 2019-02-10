@@ -33,6 +33,9 @@
     <None Include="HLSL\Sky.hlsli">
       <Filter>着色器</Filter>
     </None>
+    <None Include="HLSL\BoudingBox.hlsli">
+      <Filter>着色器</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="HLSL\Basic_VS.hlsl">
@@ -48,6 +51,12 @@
       <Filter>着色器</Filter>
     </FxCompile>
     <FxCompile Include="HLSL\Sky_VS.hlsl">
+      <Filter>着色器</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\BoudingBox_PS.hlsl">
+      <Filter>着色器</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\BoudingBox_VS.hlsl">
       <Filter>着色器</Filter>
     </FxCompile>
   </ItemGroup>
@@ -197,6 +206,9 @@
     </ClCompile>
     <ClCompile Include="SkyRender.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingBoxEffect.cpp">
+      <Filter>特效文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

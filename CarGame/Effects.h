@@ -169,6 +169,44 @@ private:
 	std::unique_ptr<Impl> pImpl;
 };
 
+class BoundingBoxEffect : IEffect
+{
+public:
+	BoundingBoxEffect();
+	virtual ~BoundingBoxEffect() override;
+
+	BoundingBoxEffect(BoundingBoxEffect&& moveFrom);
+	BoundingBoxEffect& operator=(BoundingBoxEffect&& moveFrom);
+
+	// 获取单例
+	static BoundingBoxEffect& Get();
+
+	// 初始化Sky.hlsli所需资源并初始化渲染状态
+	bool InitAll(ComPtr<ID3D11Device> device);
+
+	// 
+	// 渲染模式的变更
+	//
+
+	// 默认状态来绘制
+	void SetRenderDefault(ComPtr<ID3D11DeviceContext> deviceContext);
+
+	//
+	// 矩阵设置
+	//
+
+	void XM_CALLCONV SetWorldViewProjMatrix(DirectX::FXMMATRIX W, DirectX::CXMMATRIX V, DirectX::CXMMATRIX P);
+	void XM_CALLCONV SetWorldViewProjMatrix(DirectX::FXMMATRIX WVP);
+
+
+	// 应用常量缓冲区和纹理资源的变更
+	void Apply(ComPtr<ID3D11DeviceContext> deviceContext);
+
+private:
+	class Impl;
+	std::unique_ptr<Impl> pImpl;
+};
+
 
 
 

@@ -63,7 +63,10 @@ private:
 
 	GameObject mTrees;										// 树
 	std::vector<DirectX::XMMATRIX> mInstancedData;			// 树的实例数据
+
+	Collision::WireFrameData mHouseBoxData;					// 房子包围盒线框数据
 	Collision::WireFrameData mTreeBoxData;					// 树包围盒线框数据
+	Collision::WireFrameData mCarBoxData;                   // 汽车包围盒线框数据
 
 	Material mShadowMat;									// 阴影材质
 	Material mNormalMeterialMat;							// 普通材质
@@ -76,10 +79,16 @@ private:
 	std::unique_ptr<SkyRender> mNight;						// 天空盒(夜晚)
 	SkyBoxMode mSkyBoxMode;									// 天空盒模式
 
+	BoundingBoxEffect mBoundingBoxEffect;                   // 包围盒特效管理
+
 	std::shared_ptr<Camera> mCamera;						// 摄像机
 	CameraMode mCameraMode;									// 摄像机模式
 
 	ObjReader mObjReader;									// 模型读取对象
+
+	Collision mCollision;                                   // 用于碰撞检测
+	bool mRenderBox;                                        // 是否渲染碰撞盒
+	bool mIsCollision;                                      // 是否发生碰撞
 };
 
 

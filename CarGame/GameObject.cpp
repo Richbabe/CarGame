@@ -89,6 +89,10 @@ void XM_CALLCONV GameObject::SetWorldMatrix(FXMMATRIX world)
 	XMStoreFloat4x4(&mWorldMatrix, world);
 }
 
+XMMATRIX GameObject::GetWorldMatrix() {
+	return XMLoadFloat4x4(&mWorldMatrix);
+}
+
 BoundingBox GameObject::GetLocalBoundingBox() const
 {
 	return mModel.boundingBox;
@@ -141,6 +145,15 @@ void GameObject::ResizeBuffer(ComPtr<ID3D11Device> device, size_t count)
 	// 重新调整mCapacity
 	mCapacity = count;
 }
+
+XMFLOAT3 GameObject::GetMaxPoint() {
+	return mModel.GetMaxPoint();
+}
+
+XMFLOAT3 GameObject::GetMinPoint() {
+	return mModel.GetMinPoint();
+}
+
 
 void GameObject::Draw(ComPtr<ID3D11DeviceContext> deviceContext, BasicEffect & effect)
 {

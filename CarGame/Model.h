@@ -62,6 +62,11 @@ struct Model
 	void SetMesh(ComPtr<ID3D11Device> device, const void* vertices, UINT vertexSize, UINT vertexCount,
 		const void * indices, UINT indexCount, DXGI_FORMAT indexFormat);
 
+	DirectX::XMFLOAT3 GetMinPoint();
+	DirectX::XMFLOAT3 GetMaxPoint();
+
+	DirectX::XMFLOAT3 vMin, vMax;					// AABBºÐË«¶¥µã
+
 	std::vector<ModelPart> modelParts;
 	DirectX::BoundingBox boundingBox;
 	UINT vertexStride;

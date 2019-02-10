@@ -159,6 +159,10 @@ void Car::SetCarMaterial(Material material) {
 	}
 }
 
+XMMATRIX Car::GetCarWorldMatrix() {
+	return rotation * translation;
+}
+
 void Car::SetCarWorldMatrix(DirectX::XMMATRIX worldMatrix) {
 	
 	for (auto& car_item : carComponents)
@@ -193,6 +197,30 @@ void Car::InitCar(ComPtr<ID3D11Device> device) {
 	InitCarLeftLight(device);
 	InitCarRightLight(device);
 
+	// 初始化AABB包围盒的最小值和最大值
+	XMVECTOR vecMin = g_XMInfinity, vecMax = g_XMNegInfinity;
+
+	for (auto& car_item : carComponents)
+	{
+		XMFLOAT3 tempMax = car_item->GetMaxPoint();
+		XMFLOAT3 tempMin = car_item->GetMinPoint();
+
+		XMVECTOR vectorMax = XMLoadFloat3(&tempMax);
+		XMVECTOR vectorMin = XMLoadFloat3(&tempMin);
+
+		// 更新AABB包围盒的顶点最大值和最小值
+		vecMax = XMVectorMax(vecMax, vectorMax);
+		vecMin = XMVectorMin(vecMin, vectorMin);
+	}
+
+	XMStoreFloat3(&vMax, vecMax);
+	XMStoreFloat3(&vMin, vecMin);
+
+	vMax = XMFLOAT3(0.6f, 0.0f, 1.2f);
+	vMin = XMFLOAT3(-0.6f, -1.0f, -1.2f);
+
+	// 创建包围盒
+	BoundingBox::CreateFromPoints(boundingBox, XMLoadFloat3(&vMin), XMLoadFloat3(&vMax));
 }
 
 uint32_t ColorRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
@@ -328,6 +356,24 @@ Car::CarState Car::GetCarState() {
 
 bool Car::GetCarLightState() {
 	return carLightOn;
+}
+
+DirectX::BoundingBox Car::GetLocalBoundingBox() const {
+	return boundingBox;
+	//return carBody.GetLocalBoundingBox();
+}
+
+DirectX::BoundingBox Car::GetBoundingBox() const {
+	BoundingBox box;
+	boundingBox.Transform(box, rotation * translation);
+	return box;
+}
+
+DirectX::BoundingOrientedBox Car::GetBoundingOrientedBox() const {
+	BoundingOrientedBox box;
+	BoundingOrientedBox::CreateFromBoundingBox(box, boundingBox);
+	box.Transform(box, rotation * translation);
+	return box;
 }
 
 void Car::Draw(ComPtr<ID3D11DeviceContext> deviceContext, BasicEffect& effect) {

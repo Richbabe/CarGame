@@ -1,6 +1,8 @@
 #include "Collision.h"
-
+#include "d3dUtil.h"
 using namespace DirectX;
+using namespace Microsoft::WRL;
+
 
 Collision::WireFrameData Collision::CreateBoundingBox(const DirectX::BoundingBox & box, const DirectX::XMFLOAT4 & color)
 {
@@ -157,16 +159,85 @@ Collision::WireFrameData Collision::CreateFromCorners(const DirectX::XMFLOAT3(&c
 	//  4       5                   3     2
 	for (int i = 0; i < 8; ++i)
 		data.vertexVec.push_back({ corners[i], color });
-	for (int i = 0; i < 4; ++i)
-	{
-		data.indexVec.push_back(i);
-		data.indexVec.push_back(i);
 
-		data.indexVec.push_back(i);
-		data.indexVec.push_back((i + 1) % 4);
+	data.indexVec.push_back(0);
+	data.indexVec.push_back(1);
 
-		data.indexVec.push_back(i + 4);
-		data.indexVec.push_back((i + 1) % 4 + 4);
-	}
+	data.indexVec.push_back(0);
+	data.indexVec.push_back(4);
+
+	data.indexVec.push_back(4);
+	data.indexVec.push_back(5);
+
+	data.indexVec.push_back(1);
+	data.indexVec.push_back(5);
+
+	data.indexVec.push_back(4);
+	data.indexVec.push_back(7);
+
+	data.indexVec.push_back(0);
+	data.indexVec.push_back(3);
+
+	data.indexVec.push_back(6);
+	data.indexVec.push_back(5);
+
+	data.indexVec.push_back(1);
+	data.indexVec.push_back(2);
+
+	data.indexVec.push_back(7);
+	data.indexVec.push_back(3);
+
+	data.indexVec.push_back(3);
+	data.indexVec.push_back(2);
+
+	data.indexVec.push_back(2);
+	data.indexVec.push_back(6);
+
+	data.indexVec.push_back(6);
+	data.indexVec.push_back(7);
+
 	return data;
+}
+
+void Collision::Draw(ComPtr<ID3D11Device> device, WireFrameData wireFrameData, ComPtr<ID3D11DeviceContext> deviceContext, BoundingBoxEffect& boundingBoxEffect, DirectX::FXMMATRIX WVP) {
+	// 顶点缓冲区创建
+	D3D11_BUFFER_DESC vbd;
+	vbd.Usage = D3D11_USAGE_IMMUTABLE;
+	vbd.ByteWidth = sizeof(VertexPosColor) * (UINT)wireFrameData.vertexVec.size();
+	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbd.CPUAccessFlags = 0;
+	vbd.MiscFlags = 0;
+	vbd.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA InitData;
+	InitData.pSysMem = wireFrameData.vertexVec.data();
+
+	HR(device->CreateBuffer(&vbd, &InitData, &mVertexBuffer));
+
+	// 索引缓冲区创建
+	mIndexCount = (UINT)wireFrameData.indexVec.size();
+
+	D3D11_BUFFER_DESC ibd;
+	ibd.Usage = D3D11_USAGE_IMMUTABLE;
+	ibd.ByteWidth = sizeof(WORD) * mIndexCount;
+	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibd.CPUAccessFlags = 0;
+	ibd.StructureByteStride = 0;
+	ibd.MiscFlags = 0;
+
+	InitData.pSysMem = wireFrameData.indexVec.data();
+
+	HR(device->CreateBuffer(&ibd, &InitData, &mIndexBuffer));
+	
+	UINT strides = sizeof(VertexPosColor);
+	UINT offsets = 0;
+
+	deviceContext->IASetVertexBuffers(0, 1, mVertexBuffer.GetAddressOf(), &strides, &offsets);
+	deviceContext->IASetIndexBuffer(mIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+
+	// 更新数据并应用
+	boundingBoxEffect.SetWorldViewProjMatrix(WVP);
+	boundingBoxEffect.Apply(deviceContext);
+
+	deviceContext->DrawIndexed(mIndexCount, 0, 0);
 }
