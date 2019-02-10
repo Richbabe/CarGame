@@ -1,4 +1,5 @@
 // 存放光照参数结构体和不同类型光源的光照计算函数
+// 光照模型为Blinn-Phong光照模型
 
 
 // 方向光
@@ -52,7 +53,7 @@ struct Material
 };
 
 
-
+// 计算Blinn-Phong光照模型下的平行光
 void ComputeDirectionalLight(Material mat, DirectionalLight L,
 	float3 normal, float3 toEye,
 	out float4 ambient,
@@ -67,25 +68,28 @@ void ComputeDirectionalLight(Material mat, DirectionalLight L,
 	// 光向量与照射方向相反
     float3 lightVec = -L.Direction;
 
-	// 添加环境光
+	// ********添加环境光********
     ambient = mat.Ambient * L.Ambient;
 
-	// 添加漫反射光和镜面光
-    float diffuseFactor = dot(lightVec, normal);
+	// ********添加漫反射光和镜面光********
+	// 计算漫反射因子
+    float diffuseFactor = 0.5f * dot(lightVec, normal) + 0.5f;  // half-lambert
+	
+	// 计算半角向量（光线方向+视线方向，结果归一化）
+	float3 halfDir = normalize(lightVec + toEye);
 
-	// 展开，避免动态分支
-	[flatten]
-    if (diffuseFactor > 0.0f)
-    {
-        float3 v = reflect(-lightVec, normal);
-        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
+	// 计算Blinn-Phong镜面反射因子
+    float specFactor = pow(max(dot(normal, halfDir), 0.0f), mat.Specular.w);
 
-        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
-        spec = specFactor * mat.Specular * L.Specular;
-    }
+	// 计算漫反射光照强度
+    diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
+
+	// 计算镜面反射光照强度
+    spec = specFactor * mat.Specular * L.Specular;
+
 }
 
-
+// 计算Blinn-Phong光照模型下的点光
 void ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, float3 toEye,
 	out float4 ambient, out float4 diffuse, out float4 spec)
 {
@@ -107,22 +111,24 @@ void ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, fl
 	// 标准化光向量
     lightVec /= d;
 
-	// 环境光计算
-    ambient = mat.Ambient * L.Ambient;
+	// ********添加环境光********
+	ambient = mat.Ambient * L.Ambient;
 
-	// 漫反射和镜面计算
-    float diffuseFactor = dot(lightVec, normal);
+	// ********添加漫反射光和镜面光********
+	// 计算漫反射因子
+	float diffuseFactor = 0.5f * dot(lightVec, normal) + 0.5f;  // half-lambert
 
-	// 展开以避免动态分支
-	[flatten]
-    if (diffuseFactor > 0.0f)
-    {
-        float3 v = reflect(-lightVec, normal);
-        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
+	// 计算半角向量（光线方向+视线方向，结果归一化）
+	float3 halfDir = normalize(lightVec + toEye);
 
-        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
-        spec = specFactor * mat.Specular * L.Specular;
-    }
+	// 计算Blinn-Phong镜面反射因子
+	float specFactor = pow(max(dot(normal, halfDir), 0.0f), mat.Specular.w);
+
+	// 计算漫反射光照强度
+	diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
+
+	// 计算镜面反射光照强度
+	spec = specFactor * mat.Specular * L.Specular;
 
 	// 光的衰弱
     float att = 1.0f / dot(L.Att, float3(1.0f, d, d * d));
@@ -153,23 +159,24 @@ void ComputeSpotLight(Material mat, SpotLight L, float3 pos, float3 normal, floa
 	// 标准化光向量
     lightVec /= d;
 
-	// 计算环境光部分
-    ambient = mat.Ambient * L.Ambient;
+	// ********添加环境光********
+	ambient = mat.Ambient * L.Ambient;
 
+	// ********添加漫反射光和镜面光********
+	// 计算漫反射因子
+	float diffuseFactor = 0.5f * dot(lightVec, normal) + 0.5f;  // half-lambert
 
-    // 计算漫反射光和镜面反射光部分
-    float diffuseFactor = dot(lightVec, normal);
+	// 计算半角向量（光线方向+视线方向，结果归一化）
+	float3 halfDir = normalize(lightVec + toEye);
 
-	// 展开以避免动态分支
-	[flatten]
-    if (diffuseFactor > 0.0f)
-    {
-        float3 v = reflect(-lightVec, normal);
-        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
+	// 计算Blinn-Phong镜面反射因子
+	float specFactor = pow(max(dot(normal, halfDir), 0.0f), mat.Specular.w);
 
-        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
-        spec = specFactor * mat.Specular * L.Specular;
-    }
+	// 计算漫反射光照强度
+	diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
+
+	// 计算镜面反射光照强度
+	spec = specFactor * mat.Specular * L.Specular;
 
 	// 计算汇聚因子和衰弱系数
     float spot = pow(max(dot(-lightVec, L.Direction), 0.0f), L.Spot);

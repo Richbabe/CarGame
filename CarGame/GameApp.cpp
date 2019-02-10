@@ -386,11 +386,11 @@ void GameApp::DrawScene()
 	{
 		md2dRenderTarget->BeginDraw();
 		std::wstring text = L"按Q切换摄像机模式:\n"
-			"W/S/A/D 前进/后退/左转/右转  Esc退出\n"
+			"W/S/A/D 前进/后退/左转/右转\n"
 			"按H打开关闭车灯\n"
 			"按1：白天天空盒 按2：黄昏天空盒 按3：夜晚天空盒\n"
 			"鼠标移动控制视野 滚轮控制观察距离(第三人称模式下)\n"
-			"Alt+Enter 全屏\n"
+			"Alt+Enter：全屏  Esc：退出\n"
 			"当前模式: ";
 		if (mCameraMode == CameraMode::FirstPerson)
 			text += L"第一人称";

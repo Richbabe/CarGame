@@ -20,6 +20,10 @@ VOut VS(VIn vIn) {
 	vOut.PosH = mul(posW, viewProj);  // 计算视口坐标
 	vOut.PosW = posW.xyz;  // 计算世界坐标
 	vOut.NormalW = mul(vIn.NormalL, (float3x3) gWorldInvTranspose);  // 计算世界坐标系下的法向量
+	
+	// 计算世界坐标系下的视线向量
+	vOut.ViewDir = normalize(gEyePosW - vOut.PosW);
+
 	vOut.Tex = vIn.Tex;
 	return vOut;
 }

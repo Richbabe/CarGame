@@ -10,7 +10,7 @@ float4 PS(VOut pIn) : SV_Target{
 	pIn.NormalW = normalize(pIn.NormalW);
 
 	// 计算视线向量
-	float3 toEyeW = normalize(gEyePosW - pIn.PosW);
+	float3 toEyeW = normalize(pIn.ViewDir);
 
 	// 初始化为0 
 	float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);

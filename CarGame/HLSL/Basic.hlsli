@@ -46,13 +46,6 @@ struct VIn {
 	float2 Tex: TEXCOORD;
 };
 
-// 2D顶点着色器输入
-struct VertexPosTex
-{
-	float3 PosL : POSITION;
-	float2 Tex : TEXCOORD;
-};
-
 // 3D实例顶点着色器输入
 struct InstanceVIn {
 	float3 PosL : POSITION;
@@ -68,13 +61,7 @@ struct VOut
 	float4 PosH : SV_POSITION;
 	float3 PosW : POSITION;     // 在世界中的位置
 	float3 NormalW : NORMAL;    // 法向量在世界中的方向
-	float2 Tex : TEXCOORD;
-};
-
-// 2D顶点着色器输出
-struct VertexPosHTex
-{
-	float4 PosH : SV_POSITION;
+	float3 ViewDir : ViewDir;   // 世界坐标系下的观察向量
 	float2 Tex : TEXCOORD;
 };
 
