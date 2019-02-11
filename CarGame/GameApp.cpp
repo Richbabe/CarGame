@@ -201,17 +201,30 @@ void GameApp::InitCarPort() {
 		mWalls[i].SetMaterial(mNormalMeterialMat);
 		mWalls[i].SetTexture(texture);
 	}
-	mWalls[0].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f))));
-	mWalls[1].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(6.0f, 8.0f), XMFLOAT2(1.5f, 2.0f))));
-	mWalls[2].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
-	mWalls[3].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
-	mWalls[4].SetModel(Model(md3dDevice, Geometry::CreatePlane(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2(20.0f, 8.0f), XMFLOAT2(5.0f, 2.0f))));
+	mWalls[0].SetModel(Model(md3dDevice, Geometry::CreateBox(6.0f, 0.3f, 8.0f)));
+	mWalls[1].SetModel(Model(md3dDevice, Geometry::CreateBox(6.0f, 0.3f, 8.0f)));
+	mWalls[2].SetModel(Model(md3dDevice, Geometry::CreateBox(20.0f, 0.3f, 8.0f)));
+	mWalls[3].SetModel(Model(md3dDevice, Geometry::CreateBox(20.0f, 0.3f, 8.0f)));
+	mWalls[4].SetModel(Model(md3dDevice, Geometry::CreateBox(20.0f, 0.3f, 8.0f)));
 
 	mWalls[0].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(-7.0f, 0.0f, 10.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
 	mWalls[1].SetWorldMatrix(XMMatrixRotationX(-XM_PIDIV2) * XMMatrixTranslation(7.0f, 0.0f, 10.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
 	mWalls[2].SetWorldMatrix(XMMatrixRotationY(-XM_PIDIV2) * XMMatrixRotationZ(XM_PIDIV2) * XMMatrixTranslation(10.0f, 0.0f, 0.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
 	mWalls[3].SetWorldMatrix(XMMatrixRotationX(XM_PIDIV2) * XMMatrixTranslation(0.0f, 0.0f, -10.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
 	mWalls[4].SetWorldMatrix(XMMatrixRotationY(XM_PIDIV2) * XMMatrixRotationZ(-XM_PIDIV2) * XMMatrixTranslation(-10.0f, 0.0f, 0.0f) * XMMatrixTranslation(0.0f, 0.0f, -100.0f));
+
+	for (int i = 0; i < 5; ++i) {
+		BoundingBox wallBox = mWalls[i].GetLocalBoundingBox();
+		if(i <= 1)
+			wallBox.Transform(wallBox, XMMatrixScaling(3.0f, 0.15f, 4.0f));
+		else
+			wallBox.Transform(wallBox, XMMatrixScaling(10.0f, 0.15f, 4.0f));
+		
+		mWallsBoxData.push_back(Collision::CreateBoundingBox(wallBox, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)));
+
+		wallBox.Transform(wallBox, mWalls[i].GetWorldMatrix());
+		mWallsBox.push_back(wallBox);
+	}
 
 	// 初始化车库点光源
 	XMFLOAT3 carWorldPos = mCar.GetCarPosition();
@@ -540,15 +553,40 @@ void GameApp::UpdateScene(float dt)
 		mRenderBox = !mRenderBox;
 	}
 
-	// 碰撞检测
+	// ********碰撞检测********
+	// 检测车与房子的碰撞
 	if (mCar.GetBoundingBox().Intersects(mHouse.GetBoundingBox())) {
 		mIsCollision = true;
 
-		mCar.SetCarMoveBack();
-		mCar.CarMove(dt * -50.0f);
+		if (mCar.GetCarState() == Car::CarState::Forward) {
+			mCar.SetCarMoveBack();
+			mCar.CarMove(dt * -50.0f);
+		}
+		else if (mCar.GetCarState() == Car::CarState::Back) {
+			mCar.SetCarMoveForward();
+			mCar.CarMove(dt * 50.0f);
+		}
 	}
 	else {
 		mIsCollision = false;
+	}
+	// 检测车与墙的碰撞
+	for (int i = 0; i < mWallsBox.size(); ++i) {
+		if (mCar.GetBoundingBox().Intersects(mWallsBox[i])) {
+			mIsCollision = true;
+
+			if (mCar.GetCarState() == Car::CarState::Forward) {
+				mCar.SetCarMoveBack();
+				mCar.CarMove(dt * -50.0f);
+			}
+			else if (mCar.GetCarState() == Car::CarState::Back) {
+				mCar.SetCarMoveForward();
+				mCar.CarMove(dt * 50.0f);
+			}
+		}
+		else {
+			mIsCollision = false;
+		}
 	}
 	
 	// 退出程序，这里应向窗口发送销毁信息
@@ -616,6 +654,11 @@ void GameApp::DrawScene()
 		// 绘制汽车包围盒
 		WVP = mCar.GetCarWorldMatrix() * mCamera->GetViewMatrix() * mCamera->GetProjMatrix();
 		mCollision.Draw(md3dDevice, mCarBoxData, md3dImmediateContext, mBoundingBoxEffect, WVP);
+		// 绘制墙包围盒
+		for (int i = 0; i < mWallsBoxData.size(); ++i) {
+			WVP = mWalls[i].GetWorldMatrix() * mCamera->GetViewMatrix() * mCamera->GetProjMatrix();
+			mCollision.Draw(md3dDevice, mWallsBoxData[i], md3dImmediateContext, mBoundingBoxEffect, WVP);
+		}
 	}
 
 	// ******************

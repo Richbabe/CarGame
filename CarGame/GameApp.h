@@ -68,9 +68,11 @@ private:
 	Collision::WireFrameData mHouseBoxData;					// 房子包围盒线框数据
 	std::vector<Collision::WireFrameData> mTreesBoxData;	// 树包围盒线框数据
 	Collision::WireFrameData mCarBoxData;                   // 汽车包围盒线框数据
+	std::vector<Collision::WireFrameData> mWallsBoxData;    // 墙包围盒线框数据
 
 	std::vector<DirectX::BoundingBox> mTreesBox;            // 树包围盒（不动）
 	DirectX::BoundingBox mHouseBox;                         // 房子包围盒(不动)
+	std::vector<DirectX::BoundingBox> mWallsBox;            // 墙包围盒（不动）
 
 	Material mShadowMat;									// 阴影材质
 	Material mNormalMeterialMat;							// 普通材质

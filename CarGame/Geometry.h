@@ -72,6 +72,10 @@ public:
 		float width = 10.0f, float depth = 10.0f, float texU = 1.0f, float texV = 1.0f,
 		const DirectX::XMFLOAT4& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 
+public:
+	static DirectX::XMFLOAT3 vMax;  // 包围盒最大顶点
+	static DirectX::XMFLOAT3 vMin;  // 包围盒最小顶点
+
 private:
 	struct VertexData
 	{
