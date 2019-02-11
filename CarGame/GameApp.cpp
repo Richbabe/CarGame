@@ -2,8 +2,6 @@
 #include "d3dUtil.h"
 using namespace DirectX;
 using namespace std::experimental;
-#include "iostream"
-#pragma warning(disable:4996)
 using namespace std;
 
 GameApp::GameApp(HINSTANCE hInstance)
@@ -334,38 +332,43 @@ void GameApp::InitTree()
 	XMMATRIX S = XMMatrixScaling(0.015f, 0.015f, 0.015f);
 
 	BoundingBox treeBox = mTrees.GetLocalBoundingBox();
+	BoundingBox tempBox;
 	// 获取树包围盒顶点
-	mTreeBoxData = Collision::CreateBoundingBox(treeBox, XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+	//mTreeBoxData = Collision::CreateBoundingBox(treeBox, XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 	// 让树木底部紧贴地面位于y = 1.0的平面
-	treeBox.Transform(treeBox, S);
-	XMMATRIX T0 = XMMatrixTranslation(0.0f, -(treeBox.Center.y - treeBox.Extents.y + 1.0f), 0.0f);
+	treeBox.Transform(tempBox, S);
+	XMMATRIX T0 = XMMatrixTranslation(0.0f, -(tempBox.Center.y - tempBox.Extents.y + 1.0f), 0.0f);
 
 	// 在道路右边随机生成256棵树
 	for (int i = 0; i < 256; ++i) {
-		float x = (rand() % (100 - 6 + 1)) + 6;  // 生成[6,100]之间的随机数作为树的x坐标
-		float z = (rand() % (90 + 90 + 1)) - 90;  // 生成[-90,90]之间的随机数作为树的z坐标
+		float x = (rand() % (100 - 6 + 1)) + 6.0f;  // 生成[6,100]之间的随机数作为树的x坐标
+		float z = (rand() % (90 + 90 + 1)) - 90.0f;  // 生成[-90,90]之间的随机数作为树的z坐标
 		// 如果有重复坐标则重新生成
 		while (find(temp.begin(), temp.end(), make_pair(x, z)) != temp.end()) {
-			x = (rand() % (100 - 6 + 1)) + 6;  // 生成[5,100]之间的随机数作为树的x坐标
-			z = (rand() % (90 + 90 + 1)) - 90;  // 生成[-90,90]之间的随机数作为树的z坐标
+			x = (rand() % (100 - 6 + 1)) + 6.0f;  // 生成[5,100]之间的随机数作为树的x坐标
+			z = (rand() % (90 + 90 + 1)) - 90.0f;  // 生成[-90,90]之间的随机数作为树的z坐标
 		}
 		temp.push_back(make_pair(x, z));
 		XMMATRIX T1 = XMMatrixTranslation(x, 0.0f, z);
 		XMMATRIX R = XMMatrixRotationY(rand() % 256 / 256.0f * XM_2PI);
 		XMMATRIX World = S * R * T0 * T1;
 		mInstancedData.push_back(World);
+
+		treeBox.Transform(tempBox, World);
+		mTreesBoxData.push_back(Collision::CreateBoundingBox(tempBox, XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)));
+		mTreesBox.push_back(tempBox);
 	}
 
 	temp.clear();
 
 	// 在道路左边随机生成256棵树
 	for (int i = 0; i < 256; ++i) {
-		float x = (rand() % (100 - 6 + 1)) + 6;  // 生成[6,100]之间的随机数作为树的x坐标
-		float z = (rand() % (90 + 90 + 1)) - 90;  // 生成[-90,90]之间的随机数作为树的z坐标
+		float x = (rand() % (100 - 6 + 1)) + 6.0f;  // 生成[6,100]之间的随机数作为树的x坐标
+		float z = (rand() % (90 + 90 + 1)) - 90.0f;  // 生成[-90,90]之间的随机数作为树的z坐标
 		// 如果有重复坐标则重新生成
 		while (find(temp.begin(), temp.end(), make_pair(x, z)) != temp.end()) {
-			x = (rand() % (100 - 6 + 1)) + 6;  // 生成[5,100]之间的随机数作为树的x坐标
-			z = (rand() % (90 + 90 + 1)) - 90;  // 生成[-90,90]之间的随机数作为树的z坐标
+			x = (rand() % (100 - 6 + 1)) + 6.0f;  // 生成[5,100]之间的随机数作为树的x坐标
+			z = (rand() % (90 + 90 + 1)) - 90.0f;  // 生成[-90,90]之间的随机数作为树的z坐标
 		}
 		temp.push_back(make_pair(x, z));
 
@@ -373,6 +376,10 @@ void GameApp::InitTree()
 		XMMATRIX R = XMMatrixRotationY(rand() % 256 / 256.0f * XM_2PI);
 		XMMATRIX World = S * R * T0 * T1;
 		mInstancedData.push_back(World);
+
+		treeBox.Transform(tempBox, World);
+		mTreesBoxData.push_back(Collision::CreateBoundingBox(tempBox, XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)));
+		mTreesBox.push_back(tempBox);
 	}
 }
 
@@ -628,10 +635,6 @@ void GameApp::DrawScene()
 			text += L"第一人称\n";
 		else if (mCameraMode == CameraMode::ThirdPerson)
 			text += L"第三人称\n";
-		if (mIsCollision)
-			text += L"发生碰撞！";
-		else
-			text += L"未发生碰撞！";
 		md2dRenderTarget->DrawTextW(text.c_str(), (UINT32)text.length(), mTextFormat.Get(),
 			D2D1_RECT_F{ 0.0f, 0.0f, 600.0f, 200.0f }, mColorBrush.Get());
 		HR(md2dRenderTarget->EndDraw());
